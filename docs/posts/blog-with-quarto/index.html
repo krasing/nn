@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Tristan O’Malley">
-<meta name="dcterms.date" content="2022-11-15">
+<meta name="author" content="me">
+<meta name="dcterms.date" content="2022-11-18">
 
-<title>nn - Welcome To My Blog</title>
+<title>NN - Създаване на блог с quarto</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -73,7 +73,7 @@ ul.task-list li input[type="checkbox"] {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
     <a class="navbar-brand" href="../../index.html">
-    <span class="navbar-title">nn</span>
+    <span class="navbar-title">NN</span>
     </a>
   </div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
@@ -105,9 +105,10 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Welcome To My Blog</h1>
+      <h1 class="title">Създаване на блог с quarto</h1>
                                 <div class="quarto-categories">
-                <div class="quarto-category">news</div>
+                <div class="quarto-category">code</div>
+                <div class="quarto-category">bg</div>
               </div>
                   </div>
   </div>
@@ -118,14 +119,14 @@ ul.task-list li input[type="checkbox"] {
       <div>
       <div class="quarto-title-meta-heading">Author</div>
       <div class="quarto-title-meta-contents">
-               <p>Tristan O’Malley </p>
+               <p>me </p>
             </div>
     </div>
       
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">November 15, 2022</p>
+        <p class="date">November 18, 2022</p>
       </div>
     </div>
     
@@ -143,9 +144,36 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<p>This is the first post in a Quarto blog. Welcome!</p>
-<p><img src="thumbnail.jpg" class="img-fluid"></p>
-<p>Since this post doesn’t specify an explicit <code>image</code>, the first image in the post will be used in the listing page of posts.</p>
+<p>Създаване на блог за техническа информация с използване на платформата <a href="https://quarto.org/">quarto</a></p>
+<p>Характеристики:</p>
+<ul>
+<li>проста и интуитивна предварително зададена структура</li>
+<li>поддържа md синтаксис за въвеждане на текст, заглавия и секции, връзки, картинки, таблици</li>
+<li>поддържа преобразуване на jupyter тетрадки, съдържащи код, формули, графики</li>
+</ul>
+<p>Основни стъпки:</p>
+<ul>
+<li>локално инсталиране <a href="https://quarto.org/docs/get-started/">https://quarto.org/docs/get-started/</a></li>
+<li>генериране на структурата <a href="https://quarto.org/docs/websites/website-blog.html">https://quarto.org/docs/websites/website-blog.html</a>:
+<ul>
+<li><p>отваря се терминал от папката, където ще се съхранява блога и се изпълнява команда:</p>
+<pre><code> quarto create-project myblog --type website:blog</code></pre></li>
+<li><p>визуализира се генерирания блог</p>
+<pre><code> quarto preview myblog</code></pre></li>
+</ul></li>
+<li>редактират се различните файлове за запознаване със структурата.
+<ul>
+<li>Заглавната страница е във файл <code>index.qmd</code> в коренната директория.</li>
+<li>Обща информация за блога се дава във файл <code>about.qmd</code> в коренната директория</li>
+<li>Всяко съобщение има папка в папка <code>posts</code> и файл <code>index.qmd</code> с основното съдържание. В папката може да има и картинки.</li>
+</ul></li>
+<li>избира се тема за оформлението на сайта и се задава във файл <code>_quarto.yml</code>:</li>
+</ul>
+<pre><code>     format:
+       html:
+         theme: litera
+         css: styles.css</code></pre>
+<p>Темата по подразбиране е <code>cosmo</code> и е със синя заглавна лента. Темата, избрана за този блог е <code>litera</code> с по-убити цветове. Интересна тема е <code>journal</code>, както и много други (cerulean, cyborg, darkly, flatly, lumen, lux, materia, minty, morph, pulse, quartz, sandstone, simplex, sketchy, slate, solar, spacelab, superhero, united, vapor, yeti, zephyr).</p>
 
 
 

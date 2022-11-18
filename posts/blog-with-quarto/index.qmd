@@ -43,5 +43,4 @@ image: "image.jpg"
 Темата по подразбиране е `cosmo` и е със синя заглавна лента. Темата, избрана за този блог е `litera` с по-убити цветове. Интересна тема е `journal`, както и много други (cerulean, cyborg, darkly, flatly, lumen,
 lux, materia, minty, morph, pulse, quartz, sandstone, simplex, sketchy, slate, solar, spacelab, superhero, united, vapor, yeti, zephyr).
 
--  публикуване в Github
 

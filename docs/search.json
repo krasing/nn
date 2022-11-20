@@ -11,7 +11,14 @@
     "href": "posts/blog-with-quarto/index.html",
     "title": "Създаване на блог с quarto",
     "section": "",
-    "text": "Създаване на блог за техническа информация с използване на платформата quarto\nХарактеристики:\n\nпроста и интуитивна предварително зададена структура\nподдържа md синтаксис за въвеждане на текст, заглавия и секции, връзки, картинки, таблици\nподдържа преобразуване на jupyter тетрадки, съдържащи код, формули, графики\n\nОсновни стъпки:\n\nлокално инсталиране https://quarto.org/docs/get-started/\nгенериране на структурата https://quarto.org/docs/websites/website-blog.html:\n\nотваря се терминал от папката, където ще се съхранява блога и се изпълнява команда:\n quarto create-project myblog --type website:blog\nвизуализира се генерирания блог\n quarto preview myblog\n\nредактират се различните файлове за запознаване със структурата.\n\nЗаглавната страница е във файл index.qmd в коренната директория.\nОбща информация за блога се дава във файл about.qmd в коренната директория\nВсяко съобщение има папка в папка posts и файл index.qmd с основното съдържание. В папката може да има и картинки.\n\nизбира се тема за оформлението на сайта и се задава във файл _quarto.yml:\n\n     format:\n       html:\n         theme: litera\n         css: styles.css\nТемата по подразбиране е cosmo и е със синя заглавна лента. Темата, избрана за този блог е litera с по-убити цветове. Интересна тема е journal, както и много други (cerulean, cyborg, darkly, flatly, lumen, lux, materia, minty, morph, pulse, quartz, sandstone, simplex, sketchy, slate, solar, spacelab, superhero, united, vapor, yeti, zephyr)."
+    "text": "Създаване на блог за техническа информация с използване на платформата quarto"
+  },
+  {
+    "objectID": "posts/Gradients, backpropagation  and broadcasting.html",
+    "href": "posts/Gradients, backpropagation  and broadcasting.html",
+    "title": "NN",
+    "section": "",
+    "text": "from pathlib import Path\n\nLet’s have the function\n\\(L = f(y)\\)\n\\(y = x \\cdot w + b\\)\nwhere - the last dimension of \\(x\\) includes the \\(m\\) input features; - \\(w\\) is a weight matrix with \\(m\\) rows and \\(h\\) columns; - \\(b\\) is a bias 1D array; - \\(y\\) has \\(h\\) features (or nodes).\nA gradient is attached to each variable and parameter of the model, i.e.\n$x.g = /∂{x} = / / = y.g / = y.g w $\n\\(w.g = \\partial{L}/∂{w} = \\partial{L}/\\partial{y} \\cdot \\partial{y}/\\partial{w} = y.g \\cdot \\partial{y}/\\partial{w} = y.g \\cdot x\\)\n$b.g = /∂{b} = / / = y.g / = y.g $\nThe shapes of the gradient is the same as the shape of the corresponding variable (parameter), e.g. x.g.shape ≡  x.shape\n\n\n\nSimple NN\n\n\n\ndef lin_grad(x, w, b, y):\n    b.g = y.g.sum(dim=0)\n    w.g = x.T @ y.g\n    x.g =  y.g * w2.T"
   },
   {
     "objectID": "about.html",
@@ -25,6 +32,34 @@
     "href": "index.html",
     "title": "Neural Networks",
     "section": "",
-    "text": "Създаване на блог с quarto\n\n\n\n\n\n\n\ncode\n\n\nbg\n\n\n\n\n\n\n\n\n\n\n\nNov 18, 2022\n\n\nme\n\n\n\n\n\n\n  \n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\n\n\nNov 15, 2022\n\n\nTristan O’Malley\n\n\n\n\n\n\nNo matching items"
+    "text": "Gradients, broadcasting and backpropagation\n\n\n\n\n\n\n\nNN\n\n\n\n\n\n\n\n\n\n\n\nNov 20, 2022\n\n\nme\n\n\n\n\n\n\n  \n\n\n\n\nСъздаване на блог с quarto\n\n\n\n\n\n\n\nwebtools\n\n\nbg\n\n\n\n\n\n\n\n\n\n\n\nNov 18, 2022\n\n\nme\n\n\n\n\n\n\n  \n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\n\n\nNov 15, 2022\n\n\nTristan O’Malley\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "posts/gradients.html",
+    "href": "posts/gradients.html",
+    "title": "Gradients, broadcasting and backpropagation",
+    "section": "",
+    "text": "Let’s have \\(y = x \\cdot w + b\\). Application of the rules of differentiation is simple, e.g. \n\\[dy/dx = w\\] \\[dy/dw = x\\] \\[dy/db = 1\\]\nThe change in \\(y\\) is porportional to the change in \\(x\\). The bigger is \\(w\\), the bigger is the change of \\(y\\) for the same change of \\(x\\).\nLet’s \\(L = f(y) = f(y(x))\\). Application of the chain rule is simple, e.g. \n\\[dL/dx = df(y)/dy \\cdot dy/dx = df(y)/dy \\cdot w\\] \\[dL/dw = df(y)/dy \\cdot dy/dw = df(y)/dy \\cdot x\\] \\[dL/db = df(y)/dy \\cdot dy/db = df(y)/dy \\cdot 1\\].\nThe multidimensional case is not so simple. Functions with multiple inputs and multiple outputs have multiple partial derivatives which need to be arranged and stored properly. Applying this for batches of data complicates the picture even more.\nLet’s have \\(y = x \\cdot W + b\\) and \\(L = f(y)\\)\nwhere\n\n\\(y\\), \\(x\\) and \\(b\\) are row vectors and \\(W\\) is a matrix.\n\\(x\\) includes the \\(m\\) input features\n\\(W\\) is a weight matrix with \\(m\\) rows and \\(h\\) columns;\n\\(b\\) is a bias with \\(h\\) elements;\n\\(y\\) has \\(h\\) features (or nodes).\n\\(x\\) and \\(y\\) represent input and output features (variables, nodes in the NN). Adding additional dimension (multiple rows) could represent multiple data samples. Inputs and outputs could be replaced by matrices \\(X\\) and \\(Y\\) where the last dimension gives the features (\\(x\\) and \\(y\\) for the corresponding data point);\n\nA gradient is attached to each variable and parameter of the model, i.e.\n\\(y.g = \\partial{L}/∂{y}\\)\n\\(x.g = \\partial{L}/∂{x} = \\partial{L}/\\partial{y} \\cdot \\partial{y}/\\partial{x} = y.g \\cdot \\partial{y}/\\partial{x} = y.g \\cdot w\\)\n\\(w.g = \\partial{L}/∂{w} = \\partial{L}/\\partial{y} \\cdot \\partial{y}/\\partial{w} = y.g \\cdot \\partial{y}/\\partial{w} = y.g \\cdot x\\)\n\\(b.g = \\partial{L}/∂{b} = \\partial{L}/\\partial{y} \\cdot \\partial{y}/\\partial{b} = y.g \\cdot \\partial{y}/\\partial{b} = y.g\\)\nThe shapes of the gradient is the same as the shape of the corresponding variable (parameter), e.g. x.g.shape ≡  x.shape\n\n\n\nSimple NN\n\n\nThe structure of a fully connected neural network with single hidden layer could be represented as follows&\n\n\n\nNN with one hidden layer\n\n\n\nfrom pathlib import Path\n\n\ndef lin_grad(x, w, b, y):\n    b.g = y.g.sum(dim=0)\n    w.g = x.T @ y.g\n    x.g =  y.g * w2.T"
+  },
+  {
+    "objectID": "posts/blog-with-quarto/index.html#характеристики",
+    "href": "posts/blog-with-quarto/index.html#характеристики",
+    "title": "Създаване на блог с quarto",
+    "section": "Характеристики:",
+    "text": "Характеристики:\n\nпроста и интуитивна предварително зададена структура\nподдържа md синтаксис за въвеждане на текст, заглавия и секции, връзки, картинки, таблици\nподдържа преобразуване на jupyter тетрадки, съдържащи код, формули, графики"
+  },
+  {
+    "objectID": "posts/blog-with-quarto/index.html#основни-стъпки",
+    "href": "posts/blog-with-quarto/index.html#основни-стъпки",
+    "title": "Създаване на блог с quarto",
+    "section": "Основни стъпки:",
+    "text": "Основни стъпки:\n\nлокално инсталиране https://quarto.org/docs/get-started/\nгенериране на структурата https://quarto.org/docs/websites/website-blog.html:\n\nотваря се терминал от папката, където ще се съхранява блога и се изпълнява команда:\n quarto create-project myblog --type website:blog\nвизуализира се генерирания блог\n quarto preview myblog\n\nредактират се различните файлове за запознаване със структурата.\n\nЗаглавната страница е във файл index.qmd в коренната директория.\nОбща информация за блога се дава във файл about.qmd в коренната директория\nВсяко съобщение има папка в папка posts и файл index.qmd с основното съдържание. В папката може да има и картинки.\n\nизбира се тема за оформлението на сайта и се задава във файл _quarto.yml:\n\n     format:\n       html:\n         theme: litera\n         css: styles.css\nТемата по подразбиране е cosmo и е със синя заглавна лента. Темата, избрана за този блог е litera с по-убити цветове. Интересна тема е journal, както и много други (cerulean, cyborg, darkly, flatly, lumen, lux, materia, minty, morph, pulse, quartz, sandstone, simplex, sketchy, slate, solar, spacelab, superhero, united, vapor, yeti, zephyr)."
+  },
+  {
+    "objectID": "posts/blog-with-quarto/index.html#публикуване-на-jupyter-тетрадки",
+    "href": "posts/blog-with-quarto/index.html#публикуване-на-jupyter-тетрадки",
+    "title": "Създаване на блог с quarto",
+    "section": "Публикуване на Jupyter тетрадки",
+    "text": "Публикуване на Jupyter тетрадки\n\nJust put the notebook in the “posts” folder\nAt the beginning of the jupyter notebook we need to add a cell of type raw with metadata, e.g.\n\n---\ntitle: \"Gradients, broadcasting and backpropagation\"\nauthor: \"me\"\ndate: \"2022-11-20\"\ncategories: [NN]\nformat:\n  html:\n    code-fold: false\njupyter: python3\n---"
   }
 ]

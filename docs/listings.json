@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/gradients.html",
       "/posts/blog-with-quarto/index.html",
       "/posts/welcome/index.html"
     ]

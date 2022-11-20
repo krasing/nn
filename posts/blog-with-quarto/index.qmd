@@ -2,19 +2,19 @@
 title: "Създаване на блог с quarto"
 author: "me"
 date: "2022-11-18"
-categories: [code, bg]
-image: "image.jpg"
+categories: [webtools, bg]
+image: "https://quarto.org/quarto.png"
 ---
 
 Създаване на блог за техническа информация с използване на платформата [quarto](https://quarto.org/)
 
-Характеристики:
+## Характеристики:
 
  - проста и интуитивна предварително зададена структура
  - поддържа md синтаксис за въвеждане на текст, заглавия и секции, връзки, картинки, таблици
  - поддържа преобразуване на jupyter тетрадки, съдържащи код, формули, графики
 
-Основни стъпки:
+## Основни стъпки:
 
 - локално инсталиране [https://quarto.org/docs/get-started/](https://quarto.org/docs/get-started/)
 - генериране на структурата [https://quarto.org/docs/websites/website-blog.html](https://quarto.org/docs/websites/website-blog.html):
@@ -43,4 +43,20 @@ image: "image.jpg"
 Темата по подразбиране е `cosmo` и е със синя заглавна лента. Темата, избрана за този блог е `litera` с по-убити цветове. Интересна тема е `journal`, както и много други (cerulean, cyborg, darkly, flatly, lumen,
 lux, materia, minty, morph, pulse, quartz, sandstone, simplex, sketchy, slate, solar, spacelab, superhero, united, vapor, yeti, zephyr).
 
+## Публикуване на Jupyter тетрадки
 
+- Just put the notebook in the "posts" folder
+- At the beginning of the jupyter notebook we need to add a cell of type raw with metadata, e.g.
+
+```
+---
+title: "Gradients, broadcasting and backpropagation"
+author: "me"
+date: "2022-11-20"
+categories: [NN]
+format:
+  html:
+    code-fold: false
+jupyter: python3
+--- 
+```

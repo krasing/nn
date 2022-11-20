@@ -107,7 +107,7 @@ ul.task-list li input[type="checkbox"] {
     <div class="quarto-title column-body">
       <h1 class="title">Създаване на блог с quarto</h1>
                                 <div class="quarto-categories">
-                <div class="quarto-category">code</div>
+                <div class="quarto-category">webtools</div>
                 <div class="quarto-category">bg</div>
               </div>
                   </div>
@@ -145,13 +145,16 @@ ul.task-list li input[type="checkbox"] {
 
 
 <p>Създаване на блог за техническа информация с използване на платформата <a href="https://quarto.org/">quarto</a></p>
-<p>Характеристики:</p>
+<section id="характеристики" class="level2">
+<h2 class="anchored" data-anchor-id="характеристики">Характеристики:</h2>
 <ul>
 <li>проста и интуитивна предварително зададена структура</li>
 <li>поддържа md синтаксис за въвеждане на текст, заглавия и секции, връзки, картинки, таблици</li>
 <li>поддържа преобразуване на jupyter тетрадки, съдържащи код, формули, графики</li>
 </ul>
-<p>Основни стъпки:</p>
+</section>
+<section id="основни-стъпки" class="level2">
+<h2 class="anchored" data-anchor-id="основни-стъпки">Основни стъпки:</h2>
 <ul>
 <li>локално инсталиране <a href="https://quarto.org/docs/get-started/">https://quarto.org/docs/get-started/</a></li>
 <li>генериране на структурата <a href="https://quarto.org/docs/websites/website-blog.html">https://quarto.org/docs/websites/website-blog.html</a>:
@@ -174,8 +177,26 @@ ul.task-list li input[type="checkbox"] {
          theme: litera
          css: styles.css</code></pre>
 <p>Темата по подразбиране е <code>cosmo</code> и е със синя заглавна лента. Темата, избрана за този блог е <code>litera</code> с по-убити цветове. Интересна тема е <code>journal</code>, както и много други (cerulean, cyborg, darkly, flatly, lumen, lux, materia, minty, morph, pulse, quartz, sandstone, simplex, sketchy, slate, solar, spacelab, superhero, united, vapor, yeti, zephyr).</p>
+</section>
+<section id="публикуване-на-jupyter-тетрадки" class="level2">
+<h2 class="anchored" data-anchor-id="публикуване-на-jupyter-тетрадки">Публикуване на Jupyter тетрадки</h2>
+<ul>
+<li>Just put the notebook in the “posts” folder</li>
+<li>At the beginning of the jupyter notebook we need to add a cell of type raw with metadata, e.g.</li>
+</ul>
+<pre><code>---
+title: "Gradients, broadcasting and backpropagation"
+author: "me"
+date: "2022-11-20"
+categories: [NN]
+format:
+  html:
+    code-fold: false
+jupyter: python3
+--- </code></pre>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

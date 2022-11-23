@@ -238,13 +238,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <p>The derivative of <span class="math inline">\(\mathbf{y = A \cdot x}\)</span> with respect to <span class="math inline">\(\mathbf{x}\)</span> is <span class="math inline">\(\mathbf{A}\)</span>.</p>
 <p>The derivative of <span class="math inline">\(\mathbf{y = x \cdot A}\)</span> with respect to <span class="math inline">\(\mathbf{x}\)</span> is <span class="math inline">\(\mathbf{A^T}\)</span>.</p>
-<p>The chain rule involves matrix multiplication of Jacobian and vector</p>
+<p>The chain rule involves matrix multiplication of Jacobians and vectors</p>
 <p><strong>A gradient is attached to each variable and parameter of the model</strong>, i.e.</p>
 <p><span class="math inline">\(y.g = \frac{\partial{L}}{∂{y}}\)</span></p>
 <p><span class="math inline">\(x.g = \frac{\partial{L}}{∂{x}} = \frac{\partial{L}}{\partial{y}} \cdot \frac{\partial{y}}{\partial{x}} = y.g \cdot \frac{\partial{y}}{\partial{x}} = y.g \cdot W^T\)</span></p>
 <p><span class="math inline">\(b.g = \frac{\partial{L}}{∂{b}} = \frac{\partial{L}}{\partial{y}} \cdot \frac{\partial{y}}{\partial{b}} = y.g \cdot \frac{\partial{y}}{\partial{b}} = y.g\)</span></p>
 <p><span class="math inline">\(W.g = \partial{L}/∂{W} = ((\frac{\partial{L}}{\partial{y}})^T \cdot \frac{\partial{y}}{\partial{W}})^T = (y.g^T \cdot x)^T = x^T \cdot y.g\)</span></p>
 <p>The shapes of the gradient is the same as the shape of the corresponding variable (parameter), e.g.&nbsp;<code>x.g.shape ≡  x.shape</code></p>
+<p><img src="../xW.png" class="img-fluid" alt="Output y calculation"> <img src="../x.grad.png" class="img-fluid" alt="x.g calculation"> <img src="../W.grad.png" class="img-fluid" alt="W.g calculation"></p>
 <div class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lin_grad(x, w, b, y):</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    b.g <span class="op">=</span> y.g.<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">0</span>)</span>

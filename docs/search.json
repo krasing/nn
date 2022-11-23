@@ -14,34 +14,6 @@
     "text": "Създаване на блог за техническа информация с използване на платформата quarto"
   },
   {
-    "objectID": "posts/Gradients, backpropagation  and broadcasting.html",
-    "href": "posts/Gradients, backpropagation  and broadcasting.html",
-    "title": "NN",
-    "section": "",
-    "text": "from pathlib import Path\n\nLet’s have the function\n\\(L = f(y)\\)\n\\(y = x \\cdot w + b\\)\nwhere - the last dimension of \\(x\\) includes the \\(m\\) input features; - \\(w\\) is a weight matrix with \\(m\\) rows and \\(h\\) columns; - \\(b\\) is a bias 1D array; - \\(y\\) has \\(h\\) features (or nodes).\nA gradient is attached to each variable and parameter of the model, i.e.\n$x.g = /∂{x} = / / = y.g / = y.g w $\n\\(w.g = \\partial{L}/∂{w} = \\partial{L}/\\partial{y} \\cdot \\partial{y}/\\partial{w} = y.g \\cdot \\partial{y}/\\partial{w} = y.g \\cdot x\\)\n$b.g = /∂{b} = / / = y.g / = y.g $\nThe shapes of the gradient is the same as the shape of the corresponding variable (parameter), e.g. x.g.shape ≡  x.shape\n\n\n\nSimple NN\n\n\n\ndef lin_grad(x, w, b, y):\n    b.g = y.g.sum(dim=0)\n    w.g = x.T @ y.g\n    x.g =  y.g * w2.T"
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "My notes and clarifications for the fast.ai course 2022p2"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Neural Networks",
-    "section": "",
-    "text": "Gradients, broadcasting and backpropagation\n\n\n\n\n\n\n\nNN\n\n\n\n\n\n\n\n\n\n\n\nNov 20, 2022\n\n\nme\n\n\n\n\n\n\n  \n\n\n\n\nСъздаване на блог с quarto\n\n\n\n\n\n\n\nwebtools\n\n\nbg\n\n\n\n\n\n\n\n\n\n\n\nNov 18, 2022\n\n\nme\n\n\n\n\n\n\n  \n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\n\n\nNov 15, 2022\n\n\nTristan O’Malley\n\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "posts/gradients.html",
-    "href": "posts/gradients.html",
-    "title": "Gradients, broadcasting and backpropagation",
-    "section": "",
-    "text": "Let’s have \\(y = x \\cdot w + b\\). Application of the rules of differentiation is simple, e.g. \n\\[dy/dx = w\\] \\[dy/dw = x\\] \\[dy/db = 1\\]\nThe change in \\(y\\) is porportional to the change in \\(x\\). The bigger is \\(w\\), the bigger is the change of \\(y\\) for the same change of \\(x\\).\nLet’s \\(L = f(y) = f(y(x))\\). Application of the chain rule is simple, e.g. \n\\[dL/dx = df(y)/dy \\cdot dy/dx = df(y)/dy \\cdot w\\] \\[dL/dw = df(y)/dy \\cdot dy/dw = df(y)/dy \\cdot x\\] \\[dL/db = df(y)/dy \\cdot dy/db = df(y)/dy \\cdot 1\\].\nThe multidimensional case is not so simple. Functions with multiple inputs and multiple outputs have multiple partial derivatives which need to be arranged and stored properly. Applying this for batches of data complicates the picture even more.\nLet’s have \\(y = x \\cdot W + b\\) and \\(L = f(y)\\)\nwhere\n\n\\(y\\), \\(x\\) and \\(b\\) are row vectors and \\(W\\) is a matrix.\n\\(x\\) includes the \\(m\\) input features\n\\(W\\) is a weight matrix with \\(m\\) rows and \\(h\\) columns;\n\\(b\\) is a bias with \\(h\\) elements;\n\\(y\\) has \\(h\\) features (or nodes).\n\\(x\\) and \\(y\\) represent input and output features (variables, nodes in the NN). Adding additional dimension (multiple rows) could represent multiple data samples. Inputs and outputs could be replaced by matrices \\(X\\) and \\(Y\\) where the last dimension gives the features (\\(x\\) and \\(y\\) for the corresponding data point);\n\nA gradient is attached to each variable and parameter of the model, i.e.\n\\(y.g = \\partial{L}/∂{y}\\)\n\\(x.g = \\partial{L}/∂{x} = \\partial{L}/\\partial{y} \\cdot \\partial{y}/\\partial{x} = y.g \\cdot \\partial{y}/\\partial{x} = y.g \\cdot w\\)\n\\(w.g = \\partial{L}/∂{w} = \\partial{L}/\\partial{y} \\cdot \\partial{y}/\\partial{w} = y.g \\cdot \\partial{y}/\\partial{w} = y.g \\cdot x\\)\n\\(b.g = \\partial{L}/∂{b} = \\partial{L}/\\partial{y} \\cdot \\partial{y}/\\partial{b} = y.g \\cdot \\partial{y}/\\partial{b} = y.g\\)\nThe shapes of the gradient is the same as the shape of the corresponding variable (parameter), e.g. x.g.shape ≡  x.shape\n\n\n\nSimple NN\n\n\nThe structure of a fully connected neural network with single hidden layer could be represented as follows&\n\n\n\nNN with one hidden layer\n\n\n\nfrom pathlib import Path\n\n\ndef lin_grad(x, w, b, y):\n    b.g = y.g.sum(dim=0)\n    w.g = x.T @ y.g\n    x.g =  y.g * w2.T"
-  },
-  {
     "objectID": "posts/blog-with-quarto/index.html#характеристики",
     "href": "posts/blog-with-quarto/index.html#характеристики",
     "title": "Създаване на блог с quarto",
@@ -61,5 +33,26 @@
     "title": "Създаване на блог с quarto",
     "section": "Публикуване на Jupyter тетрадки",
     "text": "Публикуване на Jupyter тетрадки\n\nJust put the notebook in the “posts” folder\nAt the beginning of the jupyter notebook we need to add a cell of type raw with metadata, e.g.\n\n---\ntitle: \"Gradients, broadcasting and backpropagation\"\nauthor: \"me\"\ndate: \"2022-11-20\"\ncategories: [NN]\nformat:\n  html:\n    code-fold: false\njupyter: python3\n---"
+  },
+  {
+    "objectID": "posts/gradients.html",
+    "href": "posts/gradients.html",
+    "title": "Gradients, broadcasting and backpropagation",
+    "section": "",
+    "text": "Let’s have \\(y = w \\cdot x + b\\). Application of the rules of differentiation is simple, e.g. \n\\[\\frac{\\mathrm{d}y}{\\mathrm{d}x} = w , \\quad\n\\frac{\\mathrm{d}y}{\\mathrm{d}w} = x, \\quad\n\\frac{\\mathrm{d}y}{\\mathrm{d}b} = 1\\]\nThe change in \\(y\\) is porportional to the change in \\(x\\). The bigger is \\(w\\), the bigger is the change of \\(y\\) for the same change of \\(x\\).\nLet’s \\(L = f(y) = f(y(x))\\). Application of the chain rule is simple, e.g. \n\\[\\frac{\\mathrm{d}L}{\\mathrm{d}x} = \\frac{\\mathrm{d}f(y)}{\\mathrm{d}y} \\cdot \\frac{\\mathrm{d}y}{\\mathrm{d}x} = \\frac{\\mathrm{d}L}{\\mathrm{d}y} \\cdot w\\] \\[\\frac{\\mathrm{d}L}{\\mathrm{d}w} = \\frac{\\mathrm{d}f(y)}{\\mathrm{d}y} \\cdot \\frac{\\mathrm{d}y}{\\mathrm{d}w} = \\frac{\\mathrm{d}L}{\\mathrm{d}y} \\cdot x\\] \\[\\frac{\\mathrm{d}L}{\\mathrm{d}b} = \\frac{\\mathrm{d}f(y)}{\\mathrm{d}y} \\cdot \\frac{\\mathrm{d}y}{\\mathrm{d}b} = \\frac{\\mathrm{d}L}{\\mathrm{d}y} \\cdot 1\\].\nThe multidimensional case is not so simple. Functions with multiple inputs and multiple outputs have multiple partial derivatives which need to be arranged and stored properly. Applying this for batches of data complicates the picture even more.\nThe derivative of a function (transformation \\(\\psi\\)) with multiple inputs \\(\\mathbf{x} \\in \\mathbb{R}^M\\) and multiple outputs \\(\\mathbf{y} \\in \\mathbb{R}^H\\) is a matrix containing the partial derivatives of each output with respect to each input (the so called Jacobian of the transformation, \\(\\frac{\\partial{\\mathbf{y}}}{\\partial{\\mathbf{x}}} \\in \\mathbb{R}^{M \\times H}\\)). For example, if \\(M=4\\) and \\(H=2\\) we can write:\n\\(\\mathbf{y} = \\psi(\\mathbf{x})\\),\n\\(\\mathbf{x} = \\begin{bmatrix} x_1 \\\\ x_2 \\\\ x_3 \\\\ x_4\\end{bmatrix}, \\quad \\mathbf{y} = \\begin{bmatrix} y_1 \\\\ y_2 \\end{bmatrix}\\)\n\\(\\frac{\\partial{\\mathbf{y}}}{\\partial{\\mathbf{x}}} = \\begin{bmatrix} \\frac{\\partial{y_1}}{\\partial{x_1}} & \\frac{\\partial{y_1}}{\\partial{x_2}} & \\frac{\\partial{y_1}}{\\partial{x_3}} & \\frac{\\partial{y_1}}{\\partial{x_4}}\\\\ \\frac{\\partial{y_2}}{\\partial{x_1}} & \\frac{\\partial{y_2}}{\\partial{x_2}} & \\frac{\\partial{y_2}}{\\partial{x_3}} & \\frac{\\partial{y_2}}{\\partial{x_4}} \\end{bmatrix}\\)\nWe should note that in neural networks the input and output features are arranged as raw vectors.\nLet’s have \\(y = x \\cdot W + b\\) and \\(L = f(y)\\)\nwhere\n\n\\(y\\), \\(x\\) and \\(b\\) are row vectors and \\(W\\) is a matrix.\n\\(x\\) includes the \\(m\\) input features\n\\(W\\) is a weight matrix with \\(m\\) rows and \\(h\\) columns;\n\\(b\\) is a bias with \\(h\\) elements;\n\\(y\\) has \\(h\\) features (or nodes).\n\\(x\\) and \\(y\\) represent input and output features (variables, nodes in the NN). Adding additional dimension (multiple rows) could represent multiple data samples. Inputs and outputs could be replaced by matrices \\(X\\) and \\(Y\\) where the last dimension gives the features (\\(x\\) and \\(y\\) for the corresponding data point);\n\n\n\n\nSimple NN\n\n\nThe derivative of \\(\\mathbf{y = A \\cdot x}\\) with respect to \\(\\mathbf{x}\\) is \\(\\mathbf{A}\\).\nThe derivative of \\(\\mathbf{y = x \\cdot A}\\) with respect to \\(\\mathbf{x}\\) is \\(\\mathbf{A^T}\\).\nThe chain rule involves matrix multiplication of Jacobian and vector\nA gradient is attached to each variable and parameter of the model, i.e.\n\\(y.g = \\frac{\\partial{L}}{∂{y}}\\)\n\\(x.g = \\frac{\\partial{L}}{∂{x}} = \\frac{\\partial{L}}{\\partial{y}} \\cdot \\frac{\\partial{y}}{\\partial{x}} = y.g \\cdot \\frac{\\partial{y}}{\\partial{x}} = y.g \\cdot W^T\\)\n\\(b.g = \\frac{\\partial{L}}{∂{b}} = \\frac{\\partial{L}}{\\partial{y}} \\cdot \\frac{\\partial{y}}{\\partial{b}} = y.g \\cdot \\frac{\\partial{y}}{\\partial{b}} = y.g\\)\n\\(W.g = \\partial{L}/∂{W} = ((\\frac{\\partial{L}}{\\partial{y}})^T \\cdot \\frac{\\partial{y}}{\\partial{W}})^T = (y.g^T \\cdot x)^T = x^T \\cdot y.g\\)\nThe shapes of the gradient is the same as the shape of the corresponding variable (parameter), e.g. x.g.shape ≡  x.shape\n\ndef lin_grad(x, w, b, y):\n    b.g = y.g.sum(dim=0)\n    w.g = x.T @ y.g\n    x.g = y.g @ w.T\n\nThe structure of a fully connected neural network with single hidden layer could be represented as follows:\n\n\n\nNN with one hidden layer"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "My notes and clarifications for the fast.ai course 2022p2"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Neural Networks",
+    "section": "",
+    "text": "Gradients, broadcasting and backpropagation\n\n\n\n\n\n\n\nNN\n\n\n\n\n\n\n\n\n\n\n\nNov 23, 2022\n\n\nKrasin Georgiev\n\n\n\n\n\n\n  \n\n\n\n\nСъздаване на блог с quarto\n\n\n\n\n\n\n\nwebtools\n\n\nbg\n\n\n\n\n\n\n\n\n\n\n\nNov 18, 2022\n\n\nme\n\n\n\n\n\n\n  \n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\n\n\nNov 15, 2022\n\n\nTristan O’Malley\n\n\n\n\n\n\nNo matching items"
   }
 ]

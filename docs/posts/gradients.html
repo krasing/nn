@@ -6,8 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="me">
-<meta name="dcterms.date" content="2022-11-20">
+<meta name="author" content="Krasin Georgiev">
+<meta name="dcterms.date" content="2022-11-23">
 
 <title>NN - Gradients, broadcasting and backpropagation</title>
 <style>
@@ -182,14 +182,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <div>
       <div class="quarto-title-meta-heading">Author</div>
       <div class="quarto-title-meta-contents">
-               <p>me </p>
+               <p>Krasin Georgiev </p>
             </div>
     </div>
       
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">November 20, 2022</p>
+        <p class="date">November 23, 2022</p>
       </div>
     </div>
     
@@ -207,12 +207,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<p>Let’s have <span class="math inline">\(y = x \cdot w + b\)</span>. Application of the rules of differentiation is simple, e.g.&nbsp;</p>
-<p><span class="math display">\[dy/dx = w\]</span> <span class="math display">\[dy/dw = x\]</span> <span class="math display">\[dy/db = 1\]</span></p>
+<p>Let’s have <span class="math inline">\(y = w \cdot x + b\)</span>. Application of the rules of differentiation is simple, e.g.&nbsp;</p>
+<p><span class="math display">\[\frac{\mathrm{d}y}{\mathrm{d}x} = w , \quad
+\frac{\mathrm{d}y}{\mathrm{d}w} = x, \quad
+\frac{\mathrm{d}y}{\mathrm{d}b} = 1\]</span></p>
 <p>The change in <span class="math inline">\(y\)</span> is porportional to the change in <span class="math inline">\(x\)</span>. The bigger is <span class="math inline">\(w\)</span>, the bigger is the change of <span class="math inline">\(y\)</span> for the same change of <span class="math inline">\(x\)</span>.</p>
 <p>Let’s <span class="math inline">\(L = f(y) = f(y(x))\)</span>. Application of the chain rule is simple, e.g.&nbsp;</p>
-<p><span class="math display">\[dL/dx = df(y)/dy \cdot dy/dx = df(y)/dy \cdot w\]</span> <span class="math display">\[dL/dw = df(y)/dy \cdot dy/dw = df(y)/dy \cdot x\]</span> <span class="math display">\[dL/db = df(y)/dy \cdot dy/db = df(y)/dy \cdot 1\]</span>.</p>
+<p><span class="math display">\[\frac{\mathrm{d}L}{\mathrm{d}x} = \frac{\mathrm{d}f(y)}{\mathrm{d}y} \cdot \frac{\mathrm{d}y}{\mathrm{d}x} = \frac{\mathrm{d}L}{\mathrm{d}y} \cdot w\]</span> <span class="math display">\[\frac{\mathrm{d}L}{\mathrm{d}w} = \frac{\mathrm{d}f(y)}{\mathrm{d}y} \cdot \frac{\mathrm{d}y}{\mathrm{d}w} = \frac{\mathrm{d}L}{\mathrm{d}y} \cdot x\]</span> <span class="math display">\[\frac{\mathrm{d}L}{\mathrm{d}b} = \frac{\mathrm{d}f(y)}{\mathrm{d}y} \cdot \frac{\mathrm{d}y}{\mathrm{d}b} = \frac{\mathrm{d}L}{\mathrm{d}y} \cdot 1\]</span>.</p>
 <p>The multidimensional case is not so simple. Functions with multiple inputs and multiple outputs have multiple partial derivatives which need to be arranged and stored properly. Applying this for batches of data complicates the picture even more.</p>
+<p>The derivative of a function (transformation <span class="math inline">\(\psi\)</span>) with multiple inputs <span class="math inline">\(\mathbf{x} \in \mathbb{R}^M\)</span> and multiple outputs <span class="math inline">\(\mathbf{y} \in \mathbb{R}^H\)</span> is a matrix containing the partial derivatives of each output with respect to each input (the so called Jacobian of the transformation, <span class="math inline">\(\frac{\partial{\mathbf{y}}}{\partial{\mathbf{x}}} \in \mathbb{R}^{M \times H}\)</span>). For example, if <span class="math inline">\(M=4\)</span> and <span class="math inline">\(H=2\)</span> we can write:</p>
+<p><span class="math inline">\(\mathbf{y} = \psi(\mathbf{x})\)</span>,</p>
+<p><span class="math inline">\(\mathbf{x} = \begin{bmatrix} x_1 \\ x_2 \\ x_3 \\ x_4\end{bmatrix}, \quad \mathbf{y} = \begin{bmatrix} y_1 \\ y_2 \end{bmatrix}\)</span></p>
+<p><span class="math inline">\(\frac{\partial{\mathbf{y}}}{\partial{\mathbf{x}}} = \begin{bmatrix} \frac{\partial{y_1}}{\partial{x_1}} &amp; \frac{\partial{y_1}}{\partial{x_2}} &amp; \frac{\partial{y_1}}{\partial{x_3}} &amp; \frac{\partial{y_1}}{\partial{x_4}}\\ \frac{\partial{y_2}}{\partial{x_1}} &amp; \frac{\partial{y_2}}{\partial{x_2}} &amp; \frac{\partial{y_2}}{\partial{x_3}} &amp; \frac{\partial{y_2}}{\partial{x_4}} \end{bmatrix}\)</span></p>
+<p>We should note that in neural networks the input and output features are arranged as raw vectors.</p>
 <p>Let’s have <span class="math inline">\(y = x \cdot W + b\)</span> and <span class="math inline">\(L = f(y)\)</span></p>
 <p>where</p>
 <ul>
@@ -223,33 +230,33 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><span class="math inline">\(y\)</span> has <span class="math inline">\(h\)</span> features (or nodes).</li>
 <li><span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> represent input and output features (variables, nodes in the NN). Adding additional dimension (multiple rows) could represent multiple data samples. Inputs and outputs could be replaced by matrices <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> where the last dimension gives the features (<span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> for the corresponding data point);</li>
 </ul>
-<p>A gradient is attached to each variable and parameter of the model, i.e.</p>
-<p><span class="math inline">\(y.g = \partial{L}/∂{y}\)</span></p>
-<p><span class="math inline">\(x.g = \partial{L}/∂{x} = \partial{L}/\partial{y} \cdot \partial{y}/\partial{x} = y.g \cdot \partial{y}/\partial{x} = y.g \cdot w\)</span></p>
-<p><span class="math inline">\(w.g = \partial{L}/∂{w} = \partial{L}/\partial{y} \cdot \partial{y}/\partial{w} = y.g \cdot \partial{y}/\partial{w} = y.g \cdot x\)</span></p>
-<p><span class="math inline">\(b.g = \partial{L}/∂{b} = \partial{L}/\partial{y} \cdot \partial{y}/\partial{b} = y.g \cdot \partial{y}/\partial{b} = y.g\)</span></p>
-<p>The shapes of the gradient is the same as the shape of the corresponding variable (parameter), e.g.&nbsp;<code>x.g.shape ≡  x.shape</code></p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="../nn-mini.png" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Simple NN</figcaption><p></p>
 </figure>
 </div>
-<p>The structure of a fully connected neural network with single hidden layer could be represented as follows&amp;</p>
+<p>The derivative of <span class="math inline">\(\mathbf{y = A \cdot x}\)</span> with respect to <span class="math inline">\(\mathbf{x}\)</span> is <span class="math inline">\(\mathbf{A}\)</span>.</p>
+<p>The derivative of <span class="math inline">\(\mathbf{y = x \cdot A}\)</span> with respect to <span class="math inline">\(\mathbf{x}\)</span> is <span class="math inline">\(\mathbf{A^T}\)</span>.</p>
+<p>The chain rule involves matrix multiplication of Jacobian and vector</p>
+<p><strong>A gradient is attached to each variable and parameter of the model</strong>, i.e.</p>
+<p><span class="math inline">\(y.g = \frac{\partial{L}}{∂{y}}\)</span></p>
+<p><span class="math inline">\(x.g = \frac{\partial{L}}{∂{x}} = \frac{\partial{L}}{\partial{y}} \cdot \frac{\partial{y}}{\partial{x}} = y.g \cdot \frac{\partial{y}}{\partial{x}} = y.g \cdot W^T\)</span></p>
+<p><span class="math inline">\(b.g = \frac{\partial{L}}{∂{b}} = \frac{\partial{L}}{\partial{y}} \cdot \frac{\partial{y}}{\partial{b}} = y.g \cdot \frac{\partial{y}}{\partial{b}} = y.g\)</span></p>
+<p><span class="math inline">\(W.g = \partial{L}/∂{W} = ((\frac{\partial{L}}{\partial{y}})^T \cdot \frac{\partial{y}}{\partial{W}})^T = (y.g^T \cdot x)^T = x^T \cdot y.g\)</span></p>
+<p>The shapes of the gradient is the same as the shape of the corresponding variable (parameter), e.g.&nbsp;<code>x.g.shape ≡  x.shape</code></p>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lin_grad(x, w, b, y):</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    b.g <span class="op">=</span> y.g.<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    w.g <span class="op">=</span> x.T <span class="op">@</span> y.g</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    x.g <span class="op">=</span> y.g <span class="op">@</span> w.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The structure of a fully connected neural network with single hidden layer could be represented as follows:</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="../nn.png" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">NN with one hidden layer</figcaption><p></p>
 </figure>
-</div>
-<div class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lin_grad(x, w, b, y):</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    b.g <span class="op">=</span> y.g.<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    w.g <span class="op">=</span> x.T <span class="op">@</span> y.g</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    x.g <span class="op">=</span>  y.g <span class="op">*</span> w2.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 

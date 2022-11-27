@@ -215,43 +215,269 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Let’s <span class="math inline">\(L = f(y) = f(y(x))\)</span>. Application of the chain rule is simple, e.g.&nbsp;</p>
 <p><span class="math display">\[\frac{\mathrm{d}L}{\mathrm{d}x} = \frac{\mathrm{d}f(y)}{\mathrm{d}y} \cdot \frac{\mathrm{d}y}{\mathrm{d}x} = \frac{\mathrm{d}L}{\mathrm{d}y} \cdot w\]</span> <span class="math display">\[\frac{\mathrm{d}L}{\mathrm{d}w} = \frac{\mathrm{d}f(y)}{\mathrm{d}y} \cdot \frac{\mathrm{d}y}{\mathrm{d}w} = \frac{\mathrm{d}L}{\mathrm{d}y} \cdot x\]</span> <span class="math display">\[\frac{\mathrm{d}L}{\mathrm{d}b} = \frac{\mathrm{d}f(y)}{\mathrm{d}y} \cdot \frac{\mathrm{d}y}{\mathrm{d}b} = \frac{\mathrm{d}L}{\mathrm{d}y} \cdot 1\]</span>.</p>
 <p>The multidimensional case is not so simple. Functions with multiple inputs and multiple outputs have multiple partial derivatives which need to be arranged and stored properly. Applying this for batches of data complicates the picture even more.</p>
+<section id="derivative-of-a-transformation" class="level2">
+<h2 class="anchored" data-anchor-id="derivative-of-a-transformation">Derivative of a transformation</h2>
 <p>The derivative of a function (transformation <span class="math inline">\(\psi\)</span>) with multiple inputs <span class="math inline">\(\mathbf{x} \in \mathbb{R}^M\)</span> and multiple outputs <span class="math inline">\(\mathbf{y} \in \mathbb{R}^H\)</span> is a matrix containing the partial derivatives of each output with respect to each input (the so called Jacobian of the transformation, <span class="math inline">\(\frac{\partial{\mathbf{y}}}{\partial{\mathbf{x}}} \in \mathbb{R}^{M \times H}\)</span>). For example, if <span class="math inline">\(M=4\)</span> and <span class="math inline">\(H=2\)</span> we can write:</p>
 <p><span class="math inline">\(\mathbf{y} = \psi(\mathbf{x})\)</span>,</p>
 <p><span class="math inline">\(\mathbf{x} = \begin{bmatrix} x_1 \\ x_2 \\ x_3 \\ x_4\end{bmatrix}, \quad \mathbf{y} = \begin{bmatrix} y_1 \\ y_2 \end{bmatrix}\)</span></p>
 <p><span class="math inline">\(\frac{\partial{\mathbf{y}}}{\partial{\mathbf{x}}} = \begin{bmatrix} \frac{\partial{y_1}}{\partial{x_1}} &amp; \frac{\partial{y_1}}{\partial{x_2}} &amp; \frac{\partial{y_1}}{\partial{x_3}} &amp; \frac{\partial{y_1}}{\partial{x_4}}\\ \frac{\partial{y_2}}{\partial{x_1}} &amp; \frac{\partial{y_2}}{\partial{x_2}} &amp; \frac{\partial{y_2}}{\partial{x_3}} &amp; \frac{\partial{y_2}}{\partial{x_4}} \end{bmatrix}\)</span></p>
+<p>The derivative of <span class="math inline">\(\mathbf{y = W \cdot x}\)</span> with respect to <span class="math inline">\(\mathbf{x}\)</span> is <span class="math inline">\(\mathbf{W}\)</span>, i.e.&nbsp;<span class="math inline">\(\frac{∂y}{∂x} = W\)</span>.</p>
 <p>We should note that in neural networks the input and output features are arranged as raw vectors.</p>
+<p>The derivative of <span class="math inline">\(\mathbf{y = x \cdot W}\)</span> with respect to <span class="math inline">\(\mathbf{x}\)</span> is <span class="math inline">\(\mathbf{W^T}\)</span>, i.e.&nbsp;</p>
+<p><span class="math display">\[\frac{∂y}{∂x} = W^T\]</span></p>
+</section>
+<section id="the-chain-rule" class="level2">
+<h2 class="anchored" data-anchor-id="the-chain-rule">The chain rule</h2>
 <p>Let’s have <span class="math inline">\(y = x \cdot W + b\)</span> and <span class="math inline">\(L = f(y)\)</span></p>
-<p>where</p>
-<ul>
-<li><span class="math inline">\(y\)</span>, <span class="math inline">\(x\)</span> and <span class="math inline">\(b\)</span> are row vectors and <span class="math inline">\(W\)</span> is a matrix.</li>
-<li><span class="math inline">\(x\)</span> includes the <span class="math inline">\(m\)</span> input features</li>
-<li><span class="math inline">\(W\)</span> is a weight matrix with <span class="math inline">\(m\)</span> rows and <span class="math inline">\(h\)</span> columns;</li>
-<li><span class="math inline">\(b\)</span> is a bias with <span class="math inline">\(h\)</span> elements;</li>
-<li><span class="math inline">\(y\)</span> has <span class="math inline">\(h\)</span> features (or nodes).</li>
-<li><span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> represent input and output features (variables, nodes in the NN). Adding additional dimension (multiple rows) could represent multiple data samples. Inputs and outputs could be replaced by matrices <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> where the last dimension gives the features (<span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> for the corresponding data point);</li>
-</ul>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="../nn-mini.png" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Simple NN</figcaption><p></p>
 </figure>
 </div>
-<p>The derivative of <span class="math inline">\(\mathbf{y = A \cdot x}\)</span> with respect to <span class="math inline">\(\mathbf{x}\)</span> is <span class="math inline">\(\mathbf{A}\)</span>.</p>
-<p>The derivative of <span class="math inline">\(\mathbf{y = x \cdot A}\)</span> with respect to <span class="math inline">\(\mathbf{x}\)</span> is <span class="math inline">\(\mathbf{A^T}\)</span>.</p>
-<p>The chain rule involves matrix multiplication of Jacobians and vectors</p>
+<p>The chain rule involves propagating the gradient of the loss layer after layer backward towards the inputs and parameters of interest. In our demonstration case in order to calculate the gradient of <span class="math inline">\(L\)</span> with respect to the input <span class="math inline">\(x\)</span> we need to have the gradient of <span class="math inline">\(L\)</span> with respect to the output <span class="math inline">\(y\)</span>.</p>
+<p>The shapes of the gradient is the same as the shape of the corresponding variable (parameter)</p>
 <p><strong>A gradient is attached to each variable and parameter of the model</strong>, i.e.</p>
 <p><span class="math inline">\(y.g = \frac{\partial{L}}{∂{y}}\)</span></p>
 <p><span class="math inline">\(x.g = \frac{\partial{L}}{∂{x}} = \frac{\partial{L}}{\partial{y}} \cdot \frac{\partial{y}}{\partial{x}} = y.g \cdot \frac{\partial{y}}{\partial{x}} = y.g \cdot W^T\)</span></p>
 <p><span class="math inline">\(b.g = \frac{\partial{L}}{∂{b}} = \frac{\partial{L}}{\partial{y}} \cdot \frac{\partial{y}}{\partial{b}} = y.g \cdot \frac{\partial{y}}{\partial{b}} = y.g\)</span></p>
-<p><span class="math inline">\(W.g = \partial{L}/∂{W} = ((\frac{\partial{L}}{\partial{y}})^T \cdot \frac{\partial{y}}{\partial{W}})^T = (y.g^T \cdot x)^T = x^T \cdot y.g\)</span></p>
-<p>The shapes of the gradient is the same as the shape of the corresponding variable (parameter), e.g.&nbsp;<code>x.g.shape ≡  x.shape</code></p>
+<p><span class="math inline">\(W.g = \frac{\partial{L}}{∂W} = ((\frac{\partial{L}}{\partial{y}})^T \cdot \frac{\partial{y}}{\partial{W}})^T = (y.g^T \cdot x)^T = x^T \cdot y.g\)</span></p>
+<p>Notes:</p>
+<ul>
+<li><span class="math inline">\(x\)</span>, <span class="math inline">\(y\)</span> and <span class="math inline">\(b\)</span> are row vectors.</li>
+<li><span class="math inline">\(W\)</span> is a weight matrix with <span class="math inline">\(m\)</span> rows and <span class="math inline">\(h\)</span> columns;</li>
+<li><span class="math inline">\(x\)</span> includes the <span class="math inline">\(m\)</span> input features</li>
+<li><span class="math inline">\(b\)</span> is a bias with <span class="math inline">\(h\)</span> elements;</li>
+<li><span class="math inline">\(y\)</span> has <span class="math inline">\(h\)</span> features (or nodes).</li>
+<li><span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> represent input and output features (variables, nodes in the NN). Adding additional dimension (multiple rows) could represent multiple data samples. Inputs and outputs could be replaced by matrices <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> where the last dimension gives the features (<span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> for the corresponding data point);</li>
+</ul>
 <p><img src="../xW.png" class="img-fluid" alt="Output y calculation"> <img src="../x.grad.png" class="img-fluid" alt="x.g calculation"> <img src="../W.grad.png" class="img-fluid" alt="W.g calculation"></p>
+</section>
+<section id="implementation-and-testing-with-code" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-and-testing-with-code">Implementation and testing with code</h2>
+<p>Above equations are implemented in function <code>lin_grad</code> and tested in the following code</p>
 <div class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lin_grad(x, w, b, y):</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    b.g <span class="op">=</span> y.g.<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    w.g <span class="op">=</span> x.T <span class="op">@</span> y.g</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    x.g <span class="op">=</span> y.g <span class="op">@</span> w.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># y.g shoudl be available!</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    b.g <span class="op">=</span> y.g.<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">0</span>)<span class="co">#/y.shape[0]</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    w.g <span class="op">=</span> x.T <span class="op">@</span> y.g</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    x.g <span class="op">=</span> y.g <span class="op">@</span> w.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> tensor</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> pyplot <span class="im">as</span> plt</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">%</span>matplotlib inline</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate test input and ouput data</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">100</span> <span class="co"># Number of samples</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>M <span class="op">=</span> <span class="dv">4</span> <span class="co"># Number of input features</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>H <span class="op">=</span> <span class="dv">2</span> <span class="co"># Number of outputs</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> torch.rand((N, M))<span class="op">*</span><span class="dv">10</span> <span class="op">-</span> <span class="dv">5</span> <span class="co"># Input</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>k1 <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>k2 <span class="op">=</span> <span class="fl">1.5</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>k3 <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>k4 <span class="op">=</span> <span class="fl">2.5</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>k6 <span class="op">=</span> <span class="fl">3.0</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>k7 <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>W_true <span class="op">=</span> torch.tensor([[k1, k1],</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>                  [k2, k2],</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>                  [k3, k6],</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>                  [k4, k7]])</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>b_true <span class="op">=</span> torch.tensor([<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>])</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> x <span class="op">@</span> W_true <span class="op">+</span> b_true</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>W_true, y[:<span class="dv">7</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>(tensor([[ 1.0000,  1.0000],
+         [ 1.5000,  1.5000],
+         [ 2.0000,  3.0000],
+         [ 2.5000, -0.5000]]),
+ tensor([[ 11.8067,  -2.0911],
+         [ -9.3647,  -6.7345],
+         [  3.9591,  -7.5934],
+         [  9.4930,   2.5319],
+         [  2.0966,  13.3945],
+         [-12.2224, -16.5551],
+         [ 15.3866,   2.6479]]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>plt.scatter(x[:,<span class="dv">2</span>], y[:,<span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>&lt;matplotlib.collections.PathCollection at 0x7f15e44674c0&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="gradients_files/figure-html/cell-5-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate random weights</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.randn(M,H)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> torch.zeros(H)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>w, b</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<pre><code>(tensor([[ 0.7646,  1.0763],
+         [ 3.4034, -0.4162],
+         [-0.9498,  0.2595],
+         [-0.4765,  0.1934]]),
+ tensor([0., 0.]))</code></pre>
+</div>
+</div>
+<p>In order to test the function <code>lin_grad</code> we need to calculate the gradient <span class="math inline">\(∂L/dy\)</span> and save it in <span class="math inline">\(y.g\)</span>: - define model and calculate prediction - define and calculate loss <span class="math inline">\(L\)</span> as simple mean squared error <code>mse(y_pred, y_targ)</code> - define and run <code>mse_grad(y_pred, y_targ)</code> - run <code>lin_grad(x, w, b, y)</code></p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lin(x, w, b): <span class="cf">return</span> x <span class="op">@</span> w <span class="op">+</span> b</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> lin(x, w, b)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>y_pred[:<span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>tensor([[-10.3447,  -0.6232],
+        [-10.6888,  -4.0713],
+        [  0.3219,   2.6095],
+        [-10.7518,   5.9173],
+        [ 13.8666,  -1.1922]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mse(y_pred, y_targ): <span class="cf">return</span> (y_pred<span class="op">-</span>y_targ).<span class="bu">pow</span>(<span class="dv">2</span>).mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> mse(y_pred, y)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<pre><code>tensor(137.9371)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mse_grad(y_pred, y_targ): y_pred.g <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> (y_pred <span class="op">-</span> y_targ) <span class="op">/</span> y_targ.shape[<span class="dv">0</span>] <span class="op">/</span> y_targ.shape[<span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>mse_grad(y_pred, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finnally, test if all dimensions in <code>lin_grad</code> match:</p>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>lin_grad(x, w, b, y_pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next test if the loss improves</p>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>w <span class="op">-=</span> <span class="fl">0.1</span> <span class="op">*</span> w.g</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>b <span class="op">-=</span> <span class="fl">0.1</span> <span class="op">*</span> b.g</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> lin(x, w, b)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> mse(y_pred, y)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<pre><code>tensor(5.1110)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">20</span>):</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    y_pred <span class="op">=</span> lin(x, w, b)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> mse(y_pred, y)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    mse_grad(y_pred, y)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    lin_grad(x, w, b, y_pred)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    w <span class="op">-=</span> <span class="fl">0.01</span> <span class="op">*</span> w.g</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    b <span class="op">-=</span> <span class="fl">0.01</span> <span class="op">*</span> b.g</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(loss)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>w, b, W_true, b_true</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor(5.1110)
+tensor(4.5152)
+tensor(3.9969)
+tensor(3.5457)
+tensor(3.1527)
+tensor(2.8100)
+tensor(2.5109)
+tensor(2.2498)
+tensor(2.0215)
+tensor(1.8218)
+tensor(1.6469)
+tensor(1.4935)
+tensor(1.3589)
+tensor(1.2406)
+tensor(1.1365)
+tensor(1.0448)
+tensor(0.9638)
+tensor(0.8923)
+tensor(0.8289)
+tensor(0.7728)</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<pre><code>(tensor([[ 0.9728,  0.9178],
+         [ 1.4296,  1.2903],
+         [ 1.8706,  2.7733],
+         [ 2.4438, -0.5472]]),
+ tensor([-0.0191, -0.0628]),
+ tensor([[ 1.0000,  1.0000],
+         [ 1.5000,  1.5000],
+         [ 2.0000,  3.0000],
+         [ 2.5000, -0.5000]]),
+ tensor([ 0, -1]))</code></pre>
+</div>
+</div>
+</section>
+<section id="pytorch-autograd-and-backpropagation" class="level2">
+<h2 class="anchored" data-anchor-id="pytorch-autograd-and-backpropagation">PyTorch autograd and backpropagation</h2>
+<p>We will use PyTorch automatic gradient calculation to check our algorithms. This involves using the build-in methods and parameters <code>.backward()</code> and <code>.grad</code>.</p>
+<p>In order to apply PyTorch backpropagation and autograd we need to define a <code>forward</code> function that relates the inputs with the loss:</p>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> forward(x, y):</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    y_pred <span class="op">=</span> lin(x, w, b)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span>  mse(y_pred, y)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> forward(x, y)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<pre><code>tensor(0.7228)</code></pre>
+</div>
+</div>
+<p>But this is not enough:</p>
+<pre><code>    loss.backward()</code></pre>
+<p>–&gt; <code>RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn</code></p>
+<p>Looks like a slot for saving the gradient to the corresponding inputs and model parameters should be required.</p>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Update gradients as above - manual backward - for comparison</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co"># forward</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> lin(x, w, b)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span>  mse(y_pred, y)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co"># backward</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>mse_grad(y_pred, y)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>lin_grad(x, w, b, y_pred)</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Good to know: the parameters are not updated in the backward pass!</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Require gradient to keep them with the data</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> element <span class="kw">in</span> [x, w, b]:</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    element.requires_grad_(<span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> forward(x, y)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>loss.backward()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<pre><code>tensor(0.7228, grad_fn=&lt;MeanBackward0&gt;)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> fastcore.test <span class="im">import</span> test_close</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>test_close(x.g, x.grad)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>test_close(w.g, w.grad)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>test_close(b.g, b.grad)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="what-is-next" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-next">What is next?</h2>
+<p>The next step is to try to create a “proper” non-linear neural network.</p>
 <p>The structure of a fully connected neural network with single hidden layer could be represented as follows:</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -259,8 +485,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p></p><figcaption class="figure-caption">NN with one hidden layer</figcaption><p></p>
 </figure>
 </div>
+<p>A few more gradients need to be defined and calculated</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

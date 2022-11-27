@@ -324,7 +324,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
  tensor([0., 0.]))</code></pre>
 </div>
 </div>
-<p>In order to test the function <code>lin_grad</code> we need to calculate the gradient <span class="math inline">\(∂L/dy\)</span> and save it in <span class="math inline">\(y.g\)</span>: - define model and calculate prediction - define and calculate loss <span class="math inline">\(L\)</span> as simple mean squared error <code>mse(y_pred, y_targ)</code> - define and run <code>mse_grad(y_pred, y_targ)</code> - run <code>lin_grad(x, w, b, y)</code></p>
+<p>In order to test the function <code>lin_grad</code> we need to calculate the gradient <span class="math inline">\(∂L/dy\)</span> and save it in <code>y_pred.g</code> (the gradient with respect to the prediction):</p>
+<ul>
+<li>define model and calculate prediction</li>
+<li>define and calculate loss <span class="math inline">\(L\)</span> as simple mean squared error <code>mse(y_pred, y_targ)</code></li>
+<li>define and run <code>mse_grad(y_pred, y_targ)</code></li>
+<li>run <code>lin_grad(x, w, b, y)</code></li>
+</ul>
 <div class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lin(x, w, b): <span class="cf">return</span> x <span class="op">@</span> w <span class="op">+</span> b</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>

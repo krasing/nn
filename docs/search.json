@@ -77,17 +77,17 @@
     "text": "What is next?\nThe next step is to try to create a “proper” non-linear neural network.\nThe structure of a fully connected neural network with single hidden layer could be represented as follows:\n\n\n\nNN with one hidden layer\n\n\nA few more gradients need to be defined and calculated"
   },
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "My notes and clarifications for the fast.ai course 2022p2"
-  },
-  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Neural Networks",
     "section": "",
     "text": "Gradients, broadcasting and backpropagation\n\n\n\n\n\n\n\nNN\n\n\n\n\n\n\n\n\n\n\n\nNov 23, 2022\n\n\nKrasin Georgiev\n\n\n\n\n\n\n  \n\n\n\n\nСъздаване на блог с quarto\n\n\n\n\n\n\n\nwebtools\n\n\nbg\n\n\n\n\n\n\n\n\n\n\n\nNov 18, 2022\n\n\nme\n\n\n\n\n\n\n  \n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\n\n\nNov 15, 2022\n\n\nTristan O’Malley\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "My notes and clarifications for the fast.ai course 2022p2"
   }
 ]

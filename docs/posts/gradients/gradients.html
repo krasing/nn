@@ -302,13 +302,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
          [ 1.5000,  1.5000],
          [ 2.0000,  3.0000],
          [ 2.5000, -0.5000]]),
- tensor([[ -7.5035,  -5.0367],
-         [ -2.0727, -10.6609],
-         [ -9.3386,   5.5125],
-         [ -0.1804, -17.9969],
-         [  5.1996,  -3.5898],
-         [  5.1145,  -9.0352],
-         [-17.2544, -15.2718]]))</code></pre>
+ tensor([[-11.5291, -12.7022],
+         [ -3.9763, -22.8349],
+         [  2.2930,   7.2452],
+         [ -4.9708,   6.3649],
+         [-11.7199, -24.9706],
+         [ 14.8387,   5.4946],
+         [ -9.7971,  -0.4925]]))</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="4">
@@ -325,10 +325,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> torch.zeros(H)</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>w, b</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="5">
-<pre><code>(tensor([[-0.9055, -0.2519],
-         [ 0.7502,  1.0529],
-         [-0.5820,  0.3151],
-         [ 0.1611,  1.3592]]),
+<pre><code>(tensor([[-0.0383, -0.8173],
+         [ 0.8458, -2.0662],
+         [ 0.1153,  0.0775],
+         [ 1.0845, -0.1016]]),
  tensor([0., 0.]))</code></pre>
 </div>
 </div>
@@ -346,11 +346,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> lin(x, w, b)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>y_pred[:<span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="7">
-<pre><code>tensor([[-6.4598, -7.6155],
-        [ 7.1581,  4.5498],
-        [-1.5218, -5.8842],
-        [ 3.9179,  4.0623],
-        [ 4.9901,  6.1729]])</code></pre>
+<pre><code>tensor([[ 0.0472, -0.5698],
+        [ 1.4009,  5.7816],
+        [-3.4003,  1.4367],
+        [-0.9559, -5.0894],
+        [-0.9125,  9.5171]])</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="8">
@@ -360,7 +360,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> mse(y_pred, y)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="9">
-<pre><code>tensor(120.5792)</code></pre>
+<pre><code>tensor(181.8108)</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="10">
@@ -381,7 +381,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> mse(y_pred, y)</span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="13">
-<pre><code>tensor(4.6226)</code></pre>
+<pre><code>tensor(9.2100)</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="14">
@@ -397,16 +397,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Weights and biases of the network and for the dataset:'</span>)</span>
 <span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>w, b, W_true, b_true</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>tensor(4.6226), tensor(3.9730), tensor(3.4185), tensor(2.9449), tensor(2.5404), tensor(2.1948), tensor(1.8994), tensor(1.6469), tensor(1.4310), tensor(1.2463), tensor(1.0882), tensor(0.9528), tensor(0.8368), tensor(0.7374), tensor(0.6521), tensor(0.5788), tensor(0.5159), tensor(0.4618), tensor(0.4152), tensor(0.3750), End!
+<pre><code>tensor(9.2100), tensor(7.3055), tensor(5.8198), tensor(4.6593), tensor(3.7515), tensor(3.0402), tensor(2.4818), tensor(2.0425), tensor(1.6961), tensor(1.4221), tensor(1.2048), tensor(1.0318), tensor(0.8936), tensor(0.7827), tensor(0.6933), tensor(0.6208), tensor(0.5616), tensor(0.5130), tensor(0.4729), tensor(0.4394), End!
 
 Weights and biases of the network and for the dataset:</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="14">
-<pre><code>(tensor([[ 0.8533,  0.9573],
-         [ 1.4691,  1.4570],
-         [ 1.8881,  2.9691],
-         [ 2.4253, -0.5074]]),
- tensor([-0.1483, -0.4456]),
+<pre><code>(tensor([[ 1.0095,  0.9741],
+         [ 1.5336,  1.5728],
+         [ 1.9631,  3.0287],
+         [ 2.3814, -0.5464]]),
+ tensor([ 0.0677, -0.2069]),
  tensor([[ 1.0000,  1.0000],
          [ 1.5000,  1.5000],
          [ 2.0000,  3.0000],
@@ -429,7 +429,7 @@ Weights and biases of the network and for the dataset:</code></pre>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> forward(x, y)</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="16">
-<pre><code>tensor(0.3403)</code></pre>
+<pre><code>tensor(0.4113)</code></pre>
 </div>
 </div>
 <p>But this is not enough:</p>
@@ -462,7 +462,7 @@ Weights and biases of the network and for the dataset:</code></pre>
 <div class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>loss</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="20">
-<pre><code>tensor(0.3403, grad_fn=&lt;MeanBackward0&gt;)</code></pre>
+<pre><code>tensor(0.4113, grad_fn=&lt;MeanBackward0&gt;)</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="21">

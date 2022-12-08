@@ -1,0 +1,720 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>NN</title>
+<link>https://krasing.github.io/nn/index.html</link>
+<atom:link href="https://krasing.github.io/nn/index.xml" rel="self" type="application/rss+xml"/>
+<description></description>
+<generator>quarto-1.2.269</generator>
+<lastBuildDate>Sun, 04 Dec 2022 22:00:00 GMT</lastBuildDate>
+<item>
+  <title>The Loss</title>
+  <dc:creator>Krasin Georgiev</dc:creator>
+  <link>https://krasing.github.io/nn/posts/loss/loss.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>TO DO: clarify notations (not consistent yet!), add visualizations, add multi-label case</p>
+<p>Let’ define <img src="https://latex.codecogs.com/png.latex?z"> as the output of the last linear layer (no activation):</p>
+<p><img src="https://latex.codecogs.com/png.latex?z%20=%20%5Bz_1,%20%5Cdots,%20z_h,%20%5Cdots,%20z_H%5D"></p>
+<p>Before the loss can be calculated some non-linear transformations may be needed. For example, a classification problem requires the output to be interpreted as a probability for the class assigned to the output node. Therefore the output is skewed to fit in the range [0, 1].</p>
+<p>It should be noted that this need is not limited to the classification tasks. In a regression problem for predicting values with high dynamic ranges, the same error does not have the same effect for all predictions, e.g.&nbsp;prediction error of \$1 for a product of \$1000 is small and acceptable, but the same error when the product is \$2 is not good. The simplest solution in such situation is to use logarithm, but this is out of the scope of this tutorial.</p>
+<p>The standard loss functions are crossentropy (for classification) and mean squared error (for regression). The non-linearity could be added as a separate layer or could be part of the Loss calculation. This changes the actual output and loss.</p>
+<section id="sigmoid-and-softmax-non-linearities" class="level1">
+<h1>Sigmoid and softmax non-linearities</h1>
+<p>The output <img src="https://latex.codecogs.com/png.latex?z"> can be converted to probability like values <img src="https://latex.codecogs.com/png.latex?%5Chat%7By%7D"> in two ways:</p>
+<ul>
+<li>through sigmoid, <img src="https://latex.codecogs.com/png.latex?%5Chat%7By%7D_h%20=%20p(c_h)%20=%20%5Cmathrm%7Bsigmoid%7D(z)%20=%20%5Cfrac%7B1%7D%7B1%20+%20%5Cexp(-z_h)%7D%20=%20%5Cfrac%7B%5Cexp(z_h)%7D%7B%5Cexp(z_h)+%5Cexp(0)%7D"> - different outputs are independent, used for binnary classifier, could be used for multilabel-multiclass categorisation. Each output node represents the probability of a separate binnary variable (label).</li>
+<li>through softmax, <img src="https://latex.codecogs.com/png.latex?%5Chat%7By%7D_h%20=%20p(c_h)%20=%20%5Cmathrm%7Bsoftmax%7D(z)%20=%20%5Cfrac%7B%5Cexp(z_h)%7D%7B%5Csum%7B%5Cexp(z_j)%7D%7D"> - all outputs sum to one, used for multiclass categorisation. All output node values represent a probability distribution of single variable (class, category)</li>
+</ul>
+<p>where</p>
+<ul>
+<li><img src="https://latex.codecogs.com/png.latex?c_h"> is the category assigned to the <img src="https://latex.codecogs.com/png.latex?h">-th output node</li>
+<li><img src="https://latex.codecogs.com/png.latex?%5Chat%7By_h%7D"> is the estimated likelihood of <img src="https://latex.codecogs.com/png.latex?c_h"></li>
+</ul>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;">import</span> torch</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;">from</span> torch <span class="im" style="color: #00769E;">import</span> tensor</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="co" style="color: #5E5E5E;"># Available categories</span></span>
+<span id="cb2-2">c <span class="op" style="color: #5E5E5E;">=</span> [<span class="st" style="color: #20794D;">'male'</span>, <span class="st" style="color: #20794D;">'female'</span>]</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;"># Generate test data - example output z of the last linear layer</span></span>
+<span id="cb3-2"><span class="co" style="color: #5E5E5E;"># Two output features (H=2)</span></span>
+<span id="cb3-3">z <span class="op" style="color: #5E5E5E;">=</span> tensor([<span class="fl" style="color: #AD0000;">0.</span>, <span class="fl" style="color: #AD0000;">5.</span>])</span>
+<span id="cb3-4">z, z.shape</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>(tensor([0., 5.]), torch.Size([2]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;">def</span> sigmoid(x):</span>
+<span id="cb5-2">    <span class="cf" style="color: #003B4F;">return</span> <span class="fl" style="color: #AD0000;">1.</span> <span class="op" style="color: #5E5E5E;">/</span> (<span class="dv" style="color: #AD0000;">1</span> <span class="op" style="color: #5E5E5E;">+</span> torch.exp(<span class="op" style="color: #5E5E5E;">-</span>x))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="kw" style="color: #003B4F;">def</span> softmax(x):</span>
+<span id="cb6-2">    <span class="co" style="color: #5E5E5E;"># print('Input shape:', x.shape, 'Sum shape:', torch.exp(x).sum(dim=-1, keepdim=True).shape )</span></span>
+<span id="cb6-3">    <span class="cf" style="color: #003B4F;">return</span> torch.exp(x) <span class="op" style="color: #5E5E5E;">/</span> torch.exp(x).<span class="bu" style="color: null;">sum</span>(dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>, keepdim<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">sigmoid(z), softmax(z)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<pre><code>(tensor([0.5000, 0.9933]), tensor([0.0067, 0.9933]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="im" style="color: #00769E;">from</span> fastcore.test <span class="im" style="color: #00769E;">import</span> test_close</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">test_close(softmax(z), torch.softmax(z, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">test_close(sigmoid(z), torch.sigmoid(z))</span></code></pre></div>
+</div>
+<p>Neural networks are designed to process data in batches. This means that the input (and the output) will have one additional dimension for the samples.</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;"># Generate test data - batch outputs of the last linear layer</span></span>
+<span id="cb12-2"><span class="co" style="color: #5E5E5E;"># Six items (N=6) and two output features (H=2)</span></span>
+<span id="cb12-3">zz <span class="op" style="color: #5E5E5E;">=</span> tensor([[<span class="dv" style="color: #AD0000;">1</span>, <span class="dv" style="color: #AD0000;">10</span>],</span>
+<span id="cb12-4">             [<span class="dv" style="color: #AD0000;">2</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">2</span>],</span>
+<span id="cb12-5">             [<span class="dv" style="color: #AD0000;">2</span>, <span class="dv" style="color: #AD0000;">2</span>],</span>
+<span id="cb12-6">             [<span class="dv" style="color: #AD0000;">0</span>, <span class="dv" style="color: #AD0000;">2</span>],</span>
+<span id="cb12-7">             [<span class="fl" style="color: #AD0000;">4.5</span>, <span class="dv" style="color: #AD0000;">5</span>],</span>
+<span id="cb12-8">             [<span class="dv" style="color: #AD0000;">0</span>, <span class="dv" style="color: #AD0000;">0</span>]</span>
+<span id="cb12-9">            ])</span>
+<span id="cb12-10">zz, zz.shape</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>(tensor([[ 1.0000, 10.0000],
+         [ 2.0000, -2.0000],
+         [ 2.0000,  2.0000],
+         [ 0.0000,  2.0000],
+         [ 4.5000,  5.0000],
+         [ 0.0000,  0.0000]]),
+ torch.Size([6, 2]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">softmax(zz)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<pre><code>tensor([[1.2339e-04, 9.9988e-01],
+        [9.8201e-01, 1.7986e-02],
+        [5.0000e-01, 5.0000e-01],
+        [1.1920e-01, 8.8080e-01],
+        [3.7754e-01, 6.2246e-01],
+        [5.0000e-01, 5.0000e-01]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1">test_close(sigmoid(zz), torch.sigmoid(zz))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">test_close(softmax(zz), torch.softmax(zz, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+</section>
+<section id="crossentropy-loss" class="level1">
+<h1>Crossentropy loss</h1>
+<p>The true classes/labels are needed in addition to the model predictions in order to calculate the loss.</p>
+<p>Let’s denote:</p>
+<ul>
+<li><img src="https://latex.codecogs.com/png.latex?y_%7Bih%7D"> is 1 if for sample <img src="https://latex.codecogs.com/png.latex?i"> the true class is <img src="https://latex.codecogs.com/png.latex?c_h"> and 0 otherwise (one hot encoding).</li>
+<li><img src="https://latex.codecogs.com/png.latex?y_i%20=%20%5Cmathrm%7Bargmax%7D(y_%7Bih%7D)"> is the index of the true class for sample <img src="https://latex.codecogs.com/png.latex?i"> from the batch.</li>
+<li><img src="https://latex.codecogs.com/png.latex?%5Chat%7By%7D_%7Bih%7D"> is the estimated likelihood of <img src="https://latex.codecogs.com/png.latex?c_h"> for sample <img src="https://latex.codecogs.com/png.latex?i"></li>
+<li><img src="https://latex.codecogs.com/png.latex?%5Chat%7By%7D_%7Bi%7D%20=%20%5Chat%7By%7D%5Bi,%20j=%5Cmathrm%7Bargmax%7D(y_%7Bih%7D)%5D"> is the estimated likelihood of the true class for sample <img src="https://latex.codecogs.com/png.latex?i"></li>
+</ul>
+<p>Crossentropy loss can be defined for binnary cases as follows:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%7B%5B%20y_i%20%5Cln(%5Chat%7By_i%7D)%20+%20(1%20-y_i)%20%5Cln(1%20-%5Chat%7By%7D_i)%5D%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%7B%5B%20y_i%20%5Cln(p(c_i))%20+%20(1%20-y_i)%20%5Cln(1%20-p(c_i))%5D%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%7B%5B%20y_i%20%5Cln(%5Cmathrm%7Bsigmoid(z_i)%7D)%20+%20(1%20-y_i)%20%5Cln(1%20-%5Cmathrm%7Bsigmoid(z_i)%7D)%5D%7D"></p>
+<p>Crossentropy loss can be defined for multiclass cases as follows:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%5Csum_%7Bh=1%7D%5EH%7By_%7Bij%7D%5Cln(%5Chat%7By%7D_%7Bih%7D)%20%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%5Csum_%7Bh=1%7D%5EH%7By_%7Bij%7D%20%5Cln(p(c_%7Bih%7D))%20%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%5Csum_%7Bh=1%7D%5EH%7By_%7Bij%7D%20%5Cln(%5Cmathrm%7Bsoftmax(z_%7Bih%7D)%7D)%20%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%7B%5Cln(%5Chat%7By%7D_%7Bi%7D)%20%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%7B%20%5Cln(p(c_%7Bi%7D))%20%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%7B%20%5Cln(%5Cmathrm%7Bsoftmax(z_%7Bi%7D)%7D)%20%7D"></p>
+<p>We can notice that:</p>
+<ul>
+<li>Only the softmax of the true classes is needes as the other outputs are multiplied by zero (<img src="https://latex.codecogs.com/png.latex?y_%7Bij%7D=0"> for one hot encoded class different than <img src="https://latex.codecogs.com/png.latex?y_i">)</li>
+<li>We need logarithm of the softmax, so the expression contain <img src="https://latex.codecogs.com/png.latex?%5Clog(%5Cexp())"> and can be simplified</li>
+</ul>
+<section id="logsoftmax-calculation" class="level2">
+<h2 class="anchored" data-anchor-id="logsoftmax-calculation">Log(Softmax) calculation</h2>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="kw" style="color: #003B4F;">def</span> log_softmax(x):</span>
+<span id="cb18-2">    <span class="co" style="color: #5E5E5E;">'''Logarithm of predicted probabilities calculated from the output'''</span></span>
+<span id="cb18-3">    <span class="cf" style="color: #003B4F;">return</span> softmax(x).log()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1">test_close(log_softmax(z), torch.log_softmax(z, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1">test_close(log_softmax(zz), torch.log_softmax(zz, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="kw" style="color: #003B4F;">def</span> log_softmax2(x):</span>
+<span id="cb21-2">    <span class="cf" style="color: #003B4F;">return</span> x <span class="op" style="color: #5E5E5E;">-</span> x.exp().<span class="bu" style="color: null;">sum</span>(dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>, keepdim<span class="op" style="color: #5E5E5E;">=</span><span class="va" style="color: #111111;">True</span>).log()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1">test_close(log_softmax2(z), torch.log_softmax(z, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1">test_close(log_softmax2(zz), torch.log_softmax(zz, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><span class="kw" style="color: #003B4F;">def</span> logsumexp(x):</span>
+<span id="cb24-2">    <span class="co" style="color: #5E5E5E;"># a = x.max(dim=-1, keepdim=True)[0]</span></span>
+<span id="cb24-3">    <span class="co" style="color: #5E5E5E;"># return a + (x-a).exp().sum(dim=-1, keepdim=True).log()</span></span>
+<span id="cb24-4">    a <span class="op" style="color: #5E5E5E;">=</span> x.<span class="bu" style="color: null;">max</span>(dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>)[<span class="dv" style="color: #AD0000;">0</span>]</span>
+<span id="cb24-5">    <span class="cf" style="color: #003B4F;">return</span> a <span class="op" style="color: #5E5E5E;">+</span> (x<span class="op" style="color: #5E5E5E;">-</span>a[...,<span class="va" style="color: #111111;">None</span>]).exp().<span class="bu" style="color: null;">sum</span>(dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>).log()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1">test_close(logsumexp(z), torch.logsumexp(z, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1">test_close(logsumexp(zz), torch.logsumexp(zz, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><span class="kw" style="color: #003B4F;">def</span> log_softmax3(x):</span>
+<span id="cb27-2">    <span class="cf" style="color: #003B4F;">return</span> x <span class="op" style="color: #5E5E5E;">-</span> logsumexp(x).unsqueeze(<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1">test_close(log_softmax3(z), torch.log_softmax(z, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1">test_close(log_softmax3(zz), torch.log_softmax(zz, dim<span class="op" style="color: #5E5E5E;">=-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+</section>
+<section id="cross-entropy-loss-for-log-probabilities-f.nll_loss" class="level2">
+<h2 class="anchored" data-anchor-id="cross-entropy-loss-for-log-probabilities-f.nll_loss">Cross-entropy loss for log-probabilities, <code>F.nll_loss()</code></h2>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%5Csum_%7Bh=1%7D%5EH%7By_%7Bij%7D%20%5Cln(p(c_%7Bih%7D))%20%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%7B%5Cln(%5Chat%7By%7D_%7Bi%7D)%20%7D"></p>
+<p>If case of training with such a loss function, the output of the network should be interpreted as log-probabilities. To convert to probabilities, take the exponent of the predictions. My note: a kind of failure intensity: <img src="https://latex.codecogs.com/png.latex?p%20=%20%5Cexp(-%5Clambda%20t)%20%5Cimplies%20%5Cln(p)%20=%20-%5Clambda%20t"> compare with <img src="https://latex.codecogs.com/png.latex?q%20=%201%20-%20p%20=%201%20-%20%5Cexp(-%5Clambda%20t)%20%5Capprox%20%5Clambda%20t">.</p>
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><span class="kw" style="color: #003B4F;">def</span> nll(x, y):</span>
+<span id="cb30-2">    <span class="co" style="color: #5E5E5E;">'''Take the mean value of the correct x</span></span>
+<span id="cb30-3"><span class="co" style="color: #5E5E5E;">       x: pred_as_log_softmax</span></span>
+<span id="cb30-4"><span class="co" style="color: #5E5E5E;">       y: target_as_index</span></span>
+<span id="cb30-5"><span class="co" style="color: #5E5E5E;">    '''</span></span>
+<span id="cb30-6">    N <span class="op" style="color: #5E5E5E;">=</span> y.shape[<span class="dv" style="color: #AD0000;">0</span>]</span>
+<span id="cb30-7">    loss <span class="op" style="color: #5E5E5E;">=</span> <span class="op" style="color: #5E5E5E;">-</span>x[<span class="bu" style="color: null;">range</span>(N), y].mean()</span>
+<span id="cb30-8">    <span class="cf" style="color: #003B4F;">return</span> loss</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><span class="im" style="color: #00769E;">import</span> torch.nn.functional <span class="im" style="color: #00769E;">as</span> F</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1">vv <span class="op" style="color: #5E5E5E;">=</span> <span class="op" style="color: #5E5E5E;">-</span>torch.rand((<span class="dv" style="color: #AD0000;">6</span>, <span class="dv" style="color: #AD0000;">2</span>))<span class="op" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">5</span></span>
+<span id="cb32-2">y <span class="op" style="color: #5E5E5E;">=</span> torch.randint(<span class="dv" style="color: #AD0000;">0</span>, <span class="dv" style="color: #AD0000;">2</span>, (<span class="dv" style="color: #AD0000;">6</span>,))</span>
+<span id="cb32-3">nll(vv, y)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="28">
+<pre><code>tensor(3.6464)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><span class="co" style="color: #5E5E5E;"># notice that the log-likelihood values are negative!</span></span>
+<span id="cb34-2">vv, y, [c[yi] <span class="cf" style="color: #003B4F;">for</span> yi <span class="kw" style="color: #003B4F;">in</span> y]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="29">
+<pre><code>(tensor([[-4.3884, -2.6768],
+         [-2.7044, -4.9118],
+         [-3.0371, -2.6989],
+         [-3.3646, -3.6605],
+         [-4.5365, -1.6881],
+         [-3.0555, -2.3157]]),
+ tensor([1, 1, 0, 1, 0, 0]),
+ ['female', 'female', 'male', 'female', 'male', 'male'])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="30">
+<div class="sourceCode cell-code" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1">test_close(nll(vv,y), F.nll_loss(vv, y))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><span class="co" style="color: #5E5E5E;"># explore the correspondance between log-likelihoods and linelihoods</span></span>
+<span id="cb37-2">a <span class="op" style="color: #5E5E5E;">=</span> tensor([<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">4</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">3</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">2</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.5</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.2</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.05</span>, <span class="dv" style="color: #AD0000;">0</span>, <span class="fl" style="color: #AD0000;">0.5</span>])</span>
+<span id="cb37-3">aa <span class="op" style="color: #5E5E5E;">=</span> a.exp()</span>
+<span id="cb37-4"><span class="bu" style="color: null;">print</span>([<span class="st" style="color: #20794D;">'</span><span class="sc" style="color: #5E5E5E;">%.2f</span><span class="st" style="color: #20794D;">'</span> <span class="op" style="color: #5E5E5E;">%</span>i <span class="cf" style="color: #003B4F;">for</span> i <span class="kw" style="color: #003B4F;">in</span> a])</span>
+<span id="cb37-5"><span class="bu" style="color: null;">print</span>([<span class="st" style="color: #20794D;">'</span><span class="sc" style="color: #5E5E5E;">%.3f</span><span class="st" style="color: #20794D;">'</span> <span class="op" style="color: #5E5E5E;">%</span>i <span class="cf" style="color: #003B4F;">for</span> i <span class="kw" style="color: #003B4F;">in</span> aa])</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>['-4.00', '-3.00', '-2.00', '-1.00', '-0.50', '-0.20', '-0.05', '0.00', '0.50']
+['0.018', '0.050', '0.135', '0.368', '0.607', '0.819', '0.951', '1.000', '1.649']</code></pre>
+</div>
+</div>
+</section>
+<section id="cross-entropy-loss-for-raw-outputs-f.cross_entropy" class="level2">
+<h2 class="anchored" data-anchor-id="cross-entropy-loss-for-raw-outputs-f.cross_entropy">Cross-entropy loss for raw outputs, <code>F.cross_entropy()</code></h2>
+<p>Cross-entropy is calculated directly from the output without conversion to probabilities or log-probabilities. All these operations are included in the loss function calculation. The interpretation of the output is unclear, could be any value from <img src="https://latex.codecogs.com/png.latex?-%5Cinfty"> to <img src="https://latex.codecogs.com/png.latex?%5Cinfty"> – useful for other regression tasks</p>
+<div class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><span class="kw" style="color: #003B4F;">def</span> cross_entropy(x, y):</span>
+<span id="cb39-2">    <span class="cf" style="color: #003B4F;">return</span> nll(log_softmax3(x), y)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1">cross_entropy(zz, y)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="33">
+<pre><code>tensor(1.0843)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1">test_close(cross_entropy(zz, y), F.cross_entropy(zz, y))</span></code></pre></div>
+</div>
+</section>
+<section id="cross-entropy-loss-for-multi-label-target" class="level2">
+<h2 class="anchored" data-anchor-id="cross-entropy-loss-for-multi-label-target">Cross-entropy loss for multi-label target</h2>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%5Csum_%7Bh=1%7D%5EH%7B%5B%20y_%7Bih%7D%20%5Cln(%5Chat%7By_%7Bih%7D%7D)%20+%20(1%20-y_%7Bih%7D)%20%5Cln(1%20-%5Chat%7By%7D_%7Bih%7D)%5D%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%5Csum_%7Bh=1%7D%5EH%7B%5B%20y_%7Bih%7D%20%5Cln(p(c_%7Bih%7D))%20+%20(1%20-y_%7Bih%7D)%20%5Cln(1%20-p(c_%7Bih%7D))%5D%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%20%5Csum_%7Bh=1%7D%5EH%20%5Csum_%7Bk=1%7D%5E2%7By_%7Bihk%7D%20%5Cln(p(c_%7Bih%7D%5Bk%5D))%20%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbb%7BL%7D%20=%20-%20%5Csum_%7Bi=1%7D%5EN%7B%5B%20y_i%20%5Cln(%5Cmathrm%7Bsigmoid(z_i)%7D)%20+%20(1%20-y_i)%20%5Cln(1%20-%5Cmathrm%7Bsigmoid(z_i)%7D)%5D%7D"></p>
+<div class="cell" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><span class="co" style="color: #5E5E5E;"># Generate test targets - a kind of one hot encoded but multiple ones are allowed</span></span>
+<span id="cb43-2">yy <span class="op" style="color: #5E5E5E;">=</span> torch.zeros_like(zz)</span>
+<span id="cb43-3">yy[<span class="bu" style="color: null;">range</span>(<span class="bu" style="color: null;">len</span>(yy)), y] <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">1</span></span>
+<span id="cb43-4"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Target as index: '</span>, y)</span>
+<span id="cb43-5"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'The same, one hot encoding:</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, yy)</span>
+<span id="cb43-6">yy[<span class="dv" style="color: #AD0000;">0</span>, <span class="dv" style="color: #AD0000;">0</span>] <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">1</span></span>
+<span id="cb43-7"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Both ones for the first sample:</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, yy)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Target as index:  tensor([1, 1, 0, 1, 0, 0])
+The same, one hot encoding:
+ tensor([[0., 1.],
+        [0., 1.],
+        [1., 0.],
+        [0., 1.],
+        [1., 0.],
+        [1., 0.]])
+Both ones for the first sample:
+ tensor([[1., 1.],
+        [0., 1.],
+        [1., 0.],
+        [0., 1.],
+        [1., 0.],
+        [1., 0.]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><span class="kw" style="color: #003B4F;">def</span> cross_entropy_multi(z, y):</span>
+<span id="cb45-2">    <span class="co" style="color: #5E5E5E;">'''z: pred as unnormalized scores</span></span>
+<span id="cb45-3"><span class="co" style="color: #5E5E5E;">       y: target as binary encoded aray'''</span></span>
+<span id="cb45-4">    s <span class="op" style="color: #5E5E5E;">=</span> torch.sigmoid(z)</span>
+<span id="cb45-5">    loss <span class="op" style="color: #5E5E5E;">=</span> <span class="op" style="color: #5E5E5E;">-</span>(y <span class="op" style="color: #5E5E5E;">*</span> s.log() <span class="op" style="color: #5E5E5E;">+</span> (<span class="dv" style="color: #AD0000;">1</span> <span class="op" style="color: #5E5E5E;">-</span> y)<span class="op" style="color: #5E5E5E;">*</span>(<span class="dv" style="color: #AD0000;">1</span> <span class="op" style="color: #5E5E5E;">-</span> s).log()).mean()</span>
+<span id="cb45-6">    <span class="cf" style="color: #003B4F;">return</span> loss</span></code></pre></div>
+</div>
+<div class="cell" data-scrolled="true" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1">cross_entropy_multi(zz, yy)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="37">
+<pre><code>tensor(1.1704)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1">F.binary_cross_entropy_with_logits(zz, yy)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="38">
+<pre><code>tensor(1.1704)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1">F.binary_cross_entropy(torch.sigmoid(zz), yy)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="39">
+<pre><code>tensor(1.1704)</code></pre>
+</div>
+</div>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>NN</category>
+  <guid>https://krasing.github.io/nn/posts/loss/loss.html</guid>
+  <pubDate>Sun, 04 Dec 2022 22:00:00 GMT</pubDate>
+  <media:content url="https://krasing.github.io/nn/posts/loss/y_pred_vs_y.png" medium="image" type="image/png" height="72" width="144"/>
+</item>
+<item>
+  <title>Gradients, broadcasting and backpropagation</title>
+  <dc:creator>Krasin Georgiev</dc:creator>
+  <link>https://krasing.github.io/nn/posts/gradients/gradients.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>Let’s have <img src="https://latex.codecogs.com/png.latex?y%20=%20w%20%5Ccdot%20x%20+%20b">. Application of the rules of differentiation is simple, e.g.&nbsp;</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Cmathrm%7Bd%7Dy%7D%7B%5Cmathrm%7Bd%7Dx%7D%20=%20w%20,%20%5Cquad%0A%5Cfrac%7B%5Cmathrm%7Bd%7Dy%7D%7B%5Cmathrm%7Bd%7Dw%7D%20=%20x,%20%5Cquad%0A%5Cfrac%7B%5Cmathrm%7Bd%7Dy%7D%7B%5Cmathrm%7Bd%7Db%7D%20=%201"></p>
+<p>The change in <img src="https://latex.codecogs.com/png.latex?y"> is porportional to the change in <img src="https://latex.codecogs.com/png.latex?x">. The bigger is <img src="https://latex.codecogs.com/png.latex?w">, the bigger is the change of <img src="https://latex.codecogs.com/png.latex?y"> for the same change of <img src="https://latex.codecogs.com/png.latex?x">.</p>
+<p>Let’s <img src="https://latex.codecogs.com/png.latex?L%20=%20f(y)%20=%20f(y(x))">. Application of the chain rule is simple, e.g.&nbsp;</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Cmathrm%7Bd%7DL%7D%7B%5Cmathrm%7Bd%7Dx%7D%20=%20%5Cfrac%7B%5Cmathrm%7Bd%7Df(y)%7D%7B%5Cmathrm%7Bd%7Dy%7D%20%5Ccdot%20%5Cfrac%7B%5Cmathrm%7Bd%7Dy%7D%7B%5Cmathrm%7Bd%7Dx%7D%20=%20%5Cfrac%7B%5Cmathrm%7Bd%7DL%7D%7B%5Cmathrm%7Bd%7Dy%7D%20%5Ccdot%20w"> <img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Cmathrm%7Bd%7DL%7D%7B%5Cmathrm%7Bd%7Dw%7D%20=%20%5Cfrac%7B%5Cmathrm%7Bd%7Df(y)%7D%7B%5Cmathrm%7Bd%7Dy%7D%20%5Ccdot%20%5Cfrac%7B%5Cmathrm%7Bd%7Dy%7D%7B%5Cmathrm%7Bd%7Dw%7D%20=%20%5Cfrac%7B%5Cmathrm%7Bd%7DL%7D%7B%5Cmathrm%7Bd%7Dy%7D%20%5Ccdot%20x"> <img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Cmathrm%7Bd%7DL%7D%7B%5Cmathrm%7Bd%7Db%7D%20=%20%5Cfrac%7B%5Cmathrm%7Bd%7Df(y)%7D%7B%5Cmathrm%7Bd%7Dy%7D%20%5Ccdot%20%5Cfrac%7B%5Cmathrm%7Bd%7Dy%7D%7B%5Cmathrm%7Bd%7Db%7D%20=%20%5Cfrac%7B%5Cmathrm%7Bd%7DL%7D%7B%5Cmathrm%7Bd%7Dy%7D%20%5Ccdot%201"></p>
+<p>The multidimensional case is not so simple. Functions with multiple inputs and multiple outputs have multiple partial derivatives which need to be arranged and stored properly. Applying this for batches of data complicates the picture even more.</p>
+<section id="derivative-of-a-transformation" class="level2">
+<h2 class="anchored" data-anchor-id="derivative-of-a-transformation">Derivative of a transformation</h2>
+<p>The derivative of a function (transformation <img src="https://latex.codecogs.com/png.latex?%5Cpsi">) with multiple inputs <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bx%7D%20%5Cin%20%5Cmathbb%7BR%7D%5EM"> and multiple outputs <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7By%7D%20%5Cin%20%5Cmathbb%7BR%7D%5EH"> is a matrix containing the partial derivatives of each output with respect to each input (the so called Jacobian of the transformation, <img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Cpartial%7B%5Cmathbf%7By%7D%7D%7D%7B%5Cpartial%7B%5Cmathbf%7Bx%7D%7D%7D%20%5Cin%20%5Cmathbb%7BR%7D%5E%7BM%20%5Ctimes%20H%7D">). For example, if <img src="https://latex.codecogs.com/png.latex?M=4"> and <img src="https://latex.codecogs.com/png.latex?H=2"> we can write:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7By%7D%20=%20%5Cpsi(%5Cmathbf%7Bx%7D)">,</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bx%7D%20=%20%5Cbegin%7Bbmatrix%7D%20x_1%20%5C%5C%20x_2%20%5C%5C%20x_3%20%5C%5C%20x_4%5Cend%7Bbmatrix%7D,%20%5Cquad%20%5Cmathbf%7By%7D%20=%20%5Cbegin%7Bbmatrix%7D%20y_1%20%5C%5C%20y_2%20%5Cend%7Bbmatrix%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Cpartial%7B%5Cmathbf%7By%7D%7D%7D%7B%5Cpartial%7B%5Cmathbf%7Bx%7D%7D%7D%20=%20%5Cbegin%7Bbmatrix%7D%20%5Cfrac%7B%5Cpartial%7By_1%7D%7D%7B%5Cpartial%7Bx_1%7D%7D%20&amp;%20%5Cfrac%7B%5Cpartial%7By_1%7D%7D%7B%5Cpartial%7Bx_2%7D%7D%20&amp;%20%5Cfrac%7B%5Cpartial%7By_1%7D%7D%7B%5Cpartial%7Bx_3%7D%7D%20&amp;%20%5Cfrac%7B%5Cpartial%7By_1%7D%7D%7B%5Cpartial%7Bx_4%7D%7D%5C%5C%20%5Cfrac%7B%5Cpartial%7By_2%7D%7D%7B%5Cpartial%7Bx_1%7D%7D%20&amp;%20%5Cfrac%7B%5Cpartial%7By_2%7D%7D%7B%5Cpartial%7Bx_2%7D%7D%20&amp;%20%5Cfrac%7B%5Cpartial%7By_2%7D%7D%7B%5Cpartial%7Bx_3%7D%7D%20&amp;%20%5Cfrac%7B%5Cpartial%7By_2%7D%7D%7B%5Cpartial%7Bx_4%7D%7D%20%5Cend%7Bbmatrix%7D"></p>
+<p>The derivative of <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7By%20=%20W%20%5Ccdot%20x%7D"> with respect to <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bx%7D"> is <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BW%7D">, i.e.&nbsp;<img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%E2%88%82y%7D%7B%E2%88%82x%7D%20=%20W">.</p>
+<p>We should note that in neural networks the input and output features are arranged as raw vectors.</p>
+<p>The derivative of <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7By%20=%20x%20%5Ccdot%20W%7D"> with respect to <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7Bx%7D"> is <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BW%5ET%7D">, i.e.&nbsp;</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%E2%88%82y%7D%7B%E2%88%82x%7D%20=%20W%5ET"></p>
+</section>
+<section id="the-chain-rule" class="level2">
+<h2 class="anchored" data-anchor-id="the-chain-rule">The chain rule</h2>
+<p>Let’s have <img src="https://latex.codecogs.com/png.latex?y%20=%20x%20%5Ccdot%20W%20+%20b"> and <img src="https://latex.codecogs.com/png.latex?L%20=%20f(y)"></p>
+<div class="quarto-layout-panel">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://krasing.github.io/nn/posts/gradients/nn-mini.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Simple NN</figcaption><p></p>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://krasing.github.io/nn/posts/gradients/xW.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Matrix view, xW</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>The chain rule involves propagating the gradient of the loss layer after layer backward towards the inputs and parameters of interest. In our demonstration case in order to calculate the gradient of <img src="https://latex.codecogs.com/png.latex?L"> with respect to the input <img src="https://latex.codecogs.com/png.latex?x"> we need to have the gradient of <img src="https://latex.codecogs.com/png.latex?L"> with respect to the output <img src="https://latex.codecogs.com/png.latex?y">.</p>
+<p>The shapes of the gradient is the same as the shape of the corresponding variable (parameter)</p>
+<p><strong>A gradient is attached to each variable and parameter of the model</strong>, i.e.</p>
+<p><img src="https://latex.codecogs.com/png.latex?y.g%20=%20%5Cfrac%7B%5Cpartial%7BL%7D%7D%7B%E2%88%82%7By%7D%7D"></p>
+<p><img src="https://latex.codecogs.com/png.latex?x.g%20=%20%5Cfrac%7B%5Cpartial%7BL%7D%7D%7B%E2%88%82%7Bx%7D%7D%20=%20%5Cfrac%7B%5Cpartial%7BL%7D%7D%7B%5Cpartial%7By%7D%7D%20%5Ccdot%20%5Cfrac%7B%5Cpartial%7By%7D%7D%7B%5Cpartial%7Bx%7D%7D%20=%20y.g%20%5Ccdot%20%5Cfrac%7B%5Cpartial%7By%7D%7D%7B%5Cpartial%7Bx%7D%7D%20=%20y.g%20%5Ccdot%20W%5ET"></p>
+<p><img src="https://latex.codecogs.com/png.latex?b.g%20=%20%5Cfrac%7B%5Cpartial%7BL%7D%7D%7B%E2%88%82%7Bb%7D%7D%20=%20%5Cfrac%7B%5Cpartial%7BL%7D%7D%7B%5Cpartial%7By%7D%7D%20%5Ccdot%20%5Cfrac%7B%5Cpartial%7By%7D%7D%7B%5Cpartial%7Bb%7D%7D%20=%20y.g%20%5Ccdot%20%5Cfrac%7B%5Cpartial%7By%7D%7D%7B%5Cpartial%7Bb%7D%7D%20=%20y.g"></p>
+<p><img src="https://latex.codecogs.com/png.latex?W.g%20=%20%5Cfrac%7B%5Cpartial%7BL%7D%7D%7B%E2%88%82W%7D%20=%20((%5Cfrac%7B%5Cpartial%7BL%7D%7D%7B%5Cpartial%7By%7D%7D)%5ET%20%5Ccdot%20%5Cfrac%7B%5Cpartial%7By%7D%7D%7B%5Cpartial%7BW%7D%7D)%5ET%20=%20(y.g%5ET%20%5Ccdot%20x)%5ET%20=%20x%5ET%20%5Ccdot%20y.g"></p>
+<p><img src="https://krasing.github.io/nn/posts/gradients/x.grad.png" class="img-fluid" alt="x.g calculation"> <img src="https://krasing.github.io/nn/posts/gradients/W.grad.png" class="img-fluid" alt="W.g calculation"></p>
+<p>Notes:</p>
+<ul>
+<li><img src="https://latex.codecogs.com/png.latex?x">, <img src="https://latex.codecogs.com/png.latex?y"> and <img src="https://latex.codecogs.com/png.latex?b"> are row vectors.</li>
+<li><img src="https://latex.codecogs.com/png.latex?W"> is a weight matrix with <img src="https://latex.codecogs.com/png.latex?m"> rows and <img src="https://latex.codecogs.com/png.latex?h"> columns;</li>
+<li><img src="https://latex.codecogs.com/png.latex?x"> includes the <img src="https://latex.codecogs.com/png.latex?m"> input features</li>
+<li><img src="https://latex.codecogs.com/png.latex?b"> is a bias with <img src="https://latex.codecogs.com/png.latex?h"> elements;</li>
+<li><img src="https://latex.codecogs.com/png.latex?y"> has <img src="https://latex.codecogs.com/png.latex?h"> features (or nodes).</li>
+<li><img src="https://latex.codecogs.com/png.latex?x"> and <img src="https://latex.codecogs.com/png.latex?y"> represent input and output features (variables, nodes in the NN). Adding additional dimension (multiple rows) could represent multiple data samples. Inputs and outputs could be replaced by matrices <img src="https://latex.codecogs.com/png.latex?X"> and <img src="https://latex.codecogs.com/png.latex?Y"> where the last dimension gives the features (<img src="https://latex.codecogs.com/png.latex?x"> and <img src="https://latex.codecogs.com/png.latex?y"> for the corresponding data point);</li>
+</ul>
+</section>
+<section id="implementation-and-testing-with-code" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-and-testing-with-code">Implementation and testing with code</h2>
+<p>Above equations are implemented in function <code>lin_grad</code> and tested in the following code</p>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="kw" style="color: #003B4F;">def</span> lin_grad(x, w, b, y):</span>
+<span id="cb1-2">    <span class="co" style="color: #5E5E5E;"># y.g shoudl be available!</span></span>
+<span id="cb1-3">    b.g <span class="op" style="color: #5E5E5E;">=</span> y.g.<span class="bu" style="color: null;">sum</span>(dim<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">0</span>)<span class="co" style="color: #5E5E5E;">#/y.shape[0]</span></span>
+<span id="cb1-4">    w.g <span class="op" style="color: #5E5E5E;">=</span> x.T <span class="op" style="color: #5E5E5E;">@</span> y.g</span>
+<span id="cb1-5">    x.g <span class="op" style="color: #5E5E5E;">=</span> y.g <span class="op" style="color: #5E5E5E;">@</span> w.T</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;">import</span> torch</span>
+<span id="cb2-2"><span class="im" style="color: #00769E;">from</span> torch <span class="im" style="color: #00769E;">import</span> tensor</span>
+<span id="cb2-3"><span class="im" style="color: #00769E;">from</span> matplotlib <span class="im" style="color: #00769E;">import</span> pyplot <span class="im" style="color: #00769E;">as</span> plt</span>
+<span id="cb2-4"><span class="op" style="color: #5E5E5E;">%</span>matplotlib inline</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;"># Generate test input and ouput data</span></span>
+<span id="cb3-2">N <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">100</span> <span class="co" style="color: #5E5E5E;"># Number of samples</span></span>
+<span id="cb3-3">M <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">4</span> <span class="co" style="color: #5E5E5E;"># Number of input features</span></span>
+<span id="cb3-4">H <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">2</span> <span class="co" style="color: #5E5E5E;"># Number of outputs</span></span>
+<span id="cb3-5">x <span class="op" style="color: #5E5E5E;">=</span> torch.rand((N, M))<span class="op" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">10</span> <span class="op" style="color: #5E5E5E;">-</span> <span class="dv" style="color: #AD0000;">5</span> <span class="co" style="color: #5E5E5E;"># Input</span></span>
+<span id="cb3-6">k1, k2, k3, k4, k6, k7 <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">1</span>, <span class="fl" style="color: #AD0000;">1.5</span>, <span class="dv" style="color: #AD0000;">2</span>, <span class="fl" style="color: #AD0000;">2.5</span>, <span class="fl" style="color: #AD0000;">3.0</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.5</span></span>
+<span id="cb3-7">W_true <span class="op" style="color: #5E5E5E;">=</span> torch.tensor([[k1, k1],</span>
+<span id="cb3-8">                  [k2, k2],</span>
+<span id="cb3-9">                  [k3, k6],</span>
+<span id="cb3-10">                  [k4, k7]])</span>
+<span id="cb3-11">b_true <span class="op" style="color: #5E5E5E;">=</span> torch.tensor([<span class="dv" style="color: #AD0000;">0</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>])</span>
+<span id="cb3-12">y <span class="op" style="color: #5E5E5E;">=</span> x <span class="op" style="color: #5E5E5E;">@</span> W_true <span class="op" style="color: #5E5E5E;">+</span> b_true <span class="co" style="color: #5E5E5E;"># Output</span></span>
+<span id="cb3-13">W_true, y[:<span class="dv" style="color: #AD0000;">7</span>]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>(tensor([[ 1.0000,  1.0000],
+         [ 1.5000,  1.5000],
+         [ 2.0000,  3.0000],
+         [ 2.5000, -0.5000]]),
+ tensor([[-11.5291, -12.7022],
+         [ -3.9763, -22.8349],
+         [  2.2930,   7.2452],
+         [ -4.9708,   6.3649],
+         [-11.7199, -24.9706],
+         [ 14.8387,   5.4946],
+         [ -9.7971,  -0.4925]]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">plt.scatter(x[:,<span class="dv" style="color: #AD0000;">2</span>], y[:,<span class="dv" style="color: #AD0000;">1</span>])<span class="op" style="color: #5E5E5E;">;</span></span>
+<span id="cb5-2">plt.xlabel(<span class="st" style="color: #20794D;">'Input, dimension (feature) No3'</span>)<span class="op" style="color: #5E5E5E;">;</span></span>
+<span id="cb5-3">plt.ylabel(<span class="st" style="color: #20794D;">'Output, dim. No2'</span>)<span class="op" style="color: #5E5E5E;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="https://krasing.github.io/nn/posts/gradients/gradients_files/figure-html/cell-5-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="co" style="color: #5E5E5E;"># Generate random weights</span></span>
+<span id="cb6-2">w <span class="op" style="color: #5E5E5E;">=</span> torch.randn(M,H)</span>
+<span id="cb6-3">b <span class="op" style="color: #5E5E5E;">=</span> torch.zeros(H)</span>
+<span id="cb6-4">w, b</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<pre><code>(tensor([[-0.0383, -0.8173],
+         [ 0.8458, -2.0662],
+         [ 0.1153,  0.0775],
+         [ 1.0845, -0.1016]]),
+ tensor([0., 0.]))</code></pre>
+</div>
+</div>
+<p>In order to test the function <code>lin_grad</code> we need to calculate the gradient <img src="https://latex.codecogs.com/png.latex?%E2%88%82L/dy"> and save it in <code>y_pred.g</code> (the gradient with respect to the prediction):</p>
+<ul>
+<li>define model and calculate prediction</li>
+<li>define and calculate loss <img src="https://latex.codecogs.com/png.latex?L"> as simple mean squared error <code>mse(y_pred, y_targ)</code></li>
+<li>define and run <code>mse_grad(y_pred, y_targ)</code></li>
+<li>run <code>lin_grad(x, w, b, y)</code></li>
+</ul>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="kw" style="color: #003B4F;">def</span> lin(x, w, b): <span class="cf" style="color: #003B4F;">return</span> x <span class="op" style="color: #5E5E5E;">@</span> w <span class="op" style="color: #5E5E5E;">+</span> b</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1">y_pred <span class="op" style="color: #5E5E5E;">=</span> lin(x, w, b)</span>
+<span id="cb9-2">y_pred[:<span class="dv" style="color: #AD0000;">5</span>]</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>tensor([[ 0.0472, -0.5698],
+        [ 1.4009,  5.7816],
+        [-3.4003,  1.4367],
+        [-0.9559, -5.0894],
+        [-0.9125,  9.5171]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="kw" style="color: #003B4F;">def</span> mse(y_pred, y_targ): <span class="cf" style="color: #003B4F;">return</span> (y_pred<span class="op" style="color: #5E5E5E;">-</span>y_targ).<span class="bu" style="color: null;">pow</span>(<span class="dv" style="color: #AD0000;">2</span>).mean()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1">loss <span class="op" style="color: #5E5E5E;">=</span> mse(y_pred, y)</span>
+<span id="cb12-2">loss</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<pre><code>tensor(181.8108)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><span class="kw" style="color: #003B4F;">def</span> mse_grad(y_pred, y_targ): y_pred.g <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">2</span> <span class="op" style="color: #5E5E5E;">*</span> (y_pred <span class="op" style="color: #5E5E5E;">-</span> y_targ) <span class="op" style="color: #5E5E5E;">/</span> y_targ.shape[<span class="dv" style="color: #AD0000;">0</span>] <span class="op" style="color: #5E5E5E;">/</span> y_targ.shape[<span class="dv" style="color: #AD0000;">1</span>]</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1">mse_grad(y_pred, y)</span></code></pre></div>
+</div>
+<p>Finnally, test if all dimensions in <code>lin_grad</code> match:</p>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1">lin_grad(x, w, b, y_pred)</span></code></pre></div>
+</div>
+<p>Next test if the loss improves</p>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">w <span class="op" style="color: #5E5E5E;">-=</span> <span class="fl" style="color: #AD0000;">0.1</span> <span class="op" style="color: #5E5E5E;">*</span> w.g</span>
+<span id="cb17-2">b <span class="op" style="color: #5E5E5E;">-=</span> <span class="fl" style="color: #AD0000;">0.1</span> <span class="op" style="color: #5E5E5E;">*</span> b.g</span>
+<span id="cb17-3">y_pred <span class="op" style="color: #5E5E5E;">=</span> lin(x, w, b)</span>
+<span id="cb17-4">loss <span class="op" style="color: #5E5E5E;">=</span> mse(y_pred, y)</span>
+<span id="cb17-5">loss</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<pre><code>tensor(9.2100)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="cf" style="color: #003B4F;">for</span> i <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">range</span>(<span class="dv" style="color: #AD0000;">20</span>):</span>
+<span id="cb19-2">    y_pred <span class="op" style="color: #5E5E5E;">=</span> lin(x, w, b)</span>
+<span id="cb19-3">    loss <span class="op" style="color: #5E5E5E;">=</span> mse(y_pred, y)</span>
+<span id="cb19-4">    mse_grad(y_pred, y)</span>
+<span id="cb19-5">    lin_grad(x, w, b, y_pred)</span>
+<span id="cb19-6">    w <span class="op" style="color: #5E5E5E;">-=</span> <span class="fl" style="color: #AD0000;">0.01</span> <span class="op" style="color: #5E5E5E;">*</span> w.g</span>
+<span id="cb19-7">    b <span class="op" style="color: #5E5E5E;">-=</span> <span class="fl" style="color: #AD0000;">0.01</span> <span class="op" style="color: #5E5E5E;">*</span> b.g</span>
+<span id="cb19-8">    <span class="bu" style="color: null;">print</span>(loss, end<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">', '</span>)</span>
+<span id="cb19-9"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'End!</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>)</span>
+<span id="cb19-10"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'Weights and biases of the network and for the dataset:'</span>)</span>
+<span id="cb19-11">w, b, W_true, b_true</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor(9.2100), tensor(7.3055), tensor(5.8198), tensor(4.6593), tensor(3.7515), tensor(3.0402), tensor(2.4818), tensor(2.0425), tensor(1.6961), tensor(1.4221), tensor(1.2048), tensor(1.0318), tensor(0.8936), tensor(0.7827), tensor(0.6933), tensor(0.6208), tensor(0.5616), tensor(0.5130), tensor(0.4729), tensor(0.4394), End!
+
+Weights and biases of the network and for the dataset:</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<pre><code>(tensor([[ 1.0095,  0.9741],
+         [ 1.5336,  1.5728],
+         [ 1.9631,  3.0287],
+         [ 2.3814, -0.5464]]),
+ tensor([ 0.0677, -0.2069]),
+ tensor([[ 1.0000,  1.0000],
+         [ 1.5000,  1.5000],
+         [ 2.0000,  3.0000],
+         [ 2.5000, -0.5000]]),
+ tensor([ 0, -1]))</code></pre>
+</div>
+</div>
+</section>
+<section id="pytorch-autograd-and-backpropagation" class="level2">
+<h2 class="anchored" data-anchor-id="pytorch-autograd-and-backpropagation">PyTorch autograd and backpropagation</h2>
+<p>We will use PyTorch automatic gradient calculation to check our algorithms. This involves using the build-in methods and parameters <code>.backward()</code> and <code>.grad</code>.</p>
+<p>In order to apply PyTorch backpropagation and autograd we need to define a <code>forward</code> function that relates the inputs with the loss:</p>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><span class="kw" style="color: #003B4F;">def</span> forward(x, y):</span>
+<span id="cb22-2">    y_pred <span class="op" style="color: #5E5E5E;">=</span> lin(x, w, b)</span>
+<span id="cb22-3">    loss <span class="op" style="color: #5E5E5E;">=</span>  mse(y_pred, y)</span>
+<span id="cb22-4">    <span class="cf" style="color: #003B4F;">return</span> loss</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1">loss <span class="op" style="color: #5E5E5E;">=</span> forward(x, y)</span>
+<span id="cb23-2">loss</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<pre><code>tensor(0.4113)</code></pre>
+</div>
+</div>
+<p>But this is not enough:</p>
+<pre><code>    loss.backward()</code></pre>
+<p>–&gt; <code>RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn</code></p>
+<p>Looks like a slot for saving the gradient to the corresponding inputs and model parameters should be required.</p>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><span class="co" style="color: #5E5E5E;"># Update gradients as above - manual backward - for comparison</span></span>
+<span id="cb26-2"></span>
+<span id="cb26-3"><span class="co" style="color: #5E5E5E;"># forward</span></span>
+<span id="cb26-4">y_pred <span class="op" style="color: #5E5E5E;">=</span> lin(x, w, b)</span>
+<span id="cb26-5">loss <span class="op" style="color: #5E5E5E;">=</span>  mse(y_pred, y)</span>
+<span id="cb26-6"></span>
+<span id="cb26-7"><span class="co" style="color: #5E5E5E;"># backward</span></span>
+<span id="cb26-8">mse_grad(y_pred, y)</span>
+<span id="cb26-9">lin_grad(x, w, b, y_pred)</span>
+<span id="cb26-10"></span>
+<span id="cb26-11"><span class="co" style="color: #5E5E5E;"># Good to know: the parameters are not updated in the backward pass!</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><span class="co" style="color: #5E5E5E;"># Require gradient to keep them with the data</span></span>
+<span id="cb27-2"></span>
+<span id="cb27-3"><span class="cf" style="color: #003B4F;">for</span> element <span class="kw" style="color: #003B4F;">in</span> [x, w, b]:</span>
+<span id="cb27-4">    element.requires_grad_(<span class="va" style="color: #111111;">True</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1">loss <span class="op" style="color: #5E5E5E;">=</span> forward(x, y)</span>
+<span id="cb28-2">loss.backward()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1">loss</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<pre><code>tensor(0.4113, grad_fn=&lt;MeanBackward0&gt;)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><span class="im" style="color: #00769E;">from</span> fastcore.test <span class="im" style="color: #00769E;">import</span> test_close</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1">test_close(x.g, x.grad)</span>
+<span id="cb32-2">test_close(w.g, w.grad)</span>
+<span id="cb32-3">test_close(b.g, b.grad)</span></code></pre></div>
+</div>
+</section>
+<section id="what-is-next" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-next">What is next?</h2>
+<p>The next step is to try to create a “proper” non-linear neural network.</p>
+<p>The structure of a fully connected neural network with single hidden layer could be represented as follows:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://krasing.github.io/nn/posts/gradients/nn.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">NN with one hidden layer</figcaption><p></p>
+</figure>
+</div>
+<p>A few more gradients need to be defined and calculated</p>
+
+
+</section>
+
+ ]]></description>
+  <category>NN</category>
+  <guid>https://krasing.github.io/nn/posts/gradients/gradients.html</guid>
+  <pubDate>Tue, 22 Nov 2022 22:00:00 GMT</pubDate>
+  <media:content url="https://krasing.github.io/nn/posts/gradients/nn-mini.png" medium="image" type="image/png" height="78" width="144"/>
+</item>
+<item>
+  <title>Създаване на блог с quarto</title>
+  <dc:creator>me</dc:creator>
+  <link>https://krasing.github.io/nn/posts/blog-with-quarto/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>Създаване на блог за техническа информация с използване на платформата <a href="https://quarto.org/">quarto</a></p>
+<section id="характеристики" class="level2">
+<h2 class="anchored" data-anchor-id="характеристики">Характеристики:</h2>
+<ul>
+<li>проста и интуитивна предварително зададена структура</li>
+<li>поддържа md синтаксис за въвеждане на текст, заглавия и секции, връзки, картинки, таблици</li>
+<li>поддържа преобразуване на jupyter тетрадки, съдържащи код, формули, графики</li>
+</ul>
+</section>
+<section id="основни-стъпки" class="level2">
+<h2 class="anchored" data-anchor-id="основни-стъпки">Основни стъпки:</h2>
+<ul>
+<li>локално инсталиране <a href="https://quarto.org/docs/get-started/">https://quarto.org/docs/get-started/</a></li>
+<li>генериране на структурата <a href="https://quarto.org/docs/websites/website-blog.html">https://quarto.org/docs/websites/website-blog.html</a>:
+<ul>
+<li><p>отваря се терминал от папката, където ще се съхранява блога и се изпълнява команда:</p>
+<pre><code> quarto create-project myblog --type website:blog</code></pre></li>
+<li><p>визуализира се генерирания блог</p>
+<pre><code> quarto preview myblog</code></pre></li>
+</ul></li>
+<li>редактират се различните файлове за запознаване със структурата.
+<ul>
+<li>Заглавната страница е във файл <code>index.qmd</code> в коренната директория.</li>
+<li>Обща информация за блога се дава във файл <code>about.qmd</code> в коренната директория</li>
+<li>Всяко съобщение има папка в папка <code>posts</code> и файл <code>index.qmd</code> с основното съдържание. В папката може да има и картинки.</li>
+</ul></li>
+<li>избира се тема за оформлението на сайта и се задава във файл <code>_quarto.yml</code>:</li>
+</ul>
+<pre><code>     format:
+       html:
+         theme: litera
+         css: styles.css</code></pre>
+<p>Темата по подразбиране е <code>cosmo</code> и е със синя заглавна лента. Темата, избрана за този блог е <code>litera</code> с по-убити цветове. Интересна тема е <code>journal</code>, както и много други (cerulean, cyborg, darkly, flatly, lumen, lux, materia, minty, morph, pulse, quartz, sandstone, simplex, sketchy, slate, solar, spacelab, superhero, united, vapor, yeti, zephyr).</p>
+</section>
+<section id="публикуване-на-jupyter-тетрадки" class="level2">
+<h2 class="anchored" data-anchor-id="публикуване-на-jupyter-тетрадки">Публикуване на Jupyter тетрадки</h2>
+<ul>
+<li>Just put the notebook in the “posts” folder</li>
+<li>At the beginning of the jupyter notebook we need to add a cell of type raw with metadata, e.g.</li>
+</ul>
+<pre><code>---
+title: "Gradients, broadcasting and backpropagation"
+author: "me"
+date: "2022-11-20"
+categories: [NN]
+format:
+  html:
+    code-fold: false
+jupyter: python3
+--- </code></pre>
+
+
+</section>
+
+ ]]></description>
+  <category>webtools</category>
+  <category>bg</category>
+  <guid>https://krasing.github.io/nn/posts/blog-with-quarto/index.html</guid>
+  <pubDate>Thu, 17 Nov 2022 22:00:00 GMT</pubDate>
+  <media:content url="https://quarto.org/quarto.png" medium="image" type="image/png"/>
+</item>
+<item>
+  <title>Welcome To My Blog</title>
+  <dc:creator>Tristan O&#39;Malley</dc:creator>
+  <link>https://krasing.github.io/nn/posts/welcome/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>This is the first post in a Quarto blog. Welcome!</p>
+<p><img src="https://krasing.github.io/nn/posts/welcome/thumbnail.jpg" class="img-fluid"></p>
+<p>Since this post doesn’t specify an explicit <code>image</code>, the first image in the post will be used in the listing page of posts.</p>
+
+
+
+ ]]></description>
+  <category>news</category>
+  <guid>https://krasing.github.io/nn/posts/welcome/index.html</guid>
+  <pubDate>Mon, 14 Nov 2022 22:00:00 GMT</pubDate>
+  <media:content url="https://krasing.github.io/nn/posts/welcome/thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
+</channel>
+</rss>

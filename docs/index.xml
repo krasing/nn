@@ -10,7 +10,577 @@
 <atom:link href="https://krasing.github.io/nn/index.xml" rel="self" type="application/rss+xml"/>
 <description></description>
 <generator>quarto-1.2.269</generator>
-<lastBuildDate>Sun, 04 Dec 2022 22:00:00 GMT</lastBuildDate>
+<lastBuildDate>Mon, 02 Jan 2023 22:00:00 GMT</lastBuildDate>
+<item>
+  <title>Hiding the details - the Module class</title>
+  <dc:creator>Krasin Georgiev</dc:creator>
+  <link>https://krasing.github.io/nn/posts/classes/classes.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>How to build a NN model? When you drive a car you don’t see all car and engine parameters. Even when an engineer designs a car he don’t know details about each component (mechanical, electrical, electro-mechanical or electronic part). This is done to manage the complexity. This approach is especially important for software design where the number of components is much greater and design flexibility is colse to infinity.</p>
+<p>The code was adapted from <a href="https://github.com/fastai/course22p2">fastai course 2022, part 2</a> while studying notebooks <code>03_backprop.ipynb</code> and <code>04_minibatch_training.ipynb</code>.</p>
+<section id="layers" class="level1">
+<h1>Layers</h1>
+<p>Some of the most widely used layers in a NN are Linear, ReLU and Mse.</p>
+<p>The weights of the layer are initiated when the object is created and are defined in the <code>__init__</code> method. The relationship for calculating the output from the input are defined in the <code>__call__</code> layer (the “forward” feature). The functionality for calculation of the gradients is provided in the <code>backward</code> method. For example:</p>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="kw" style="color: #003B4F;">class</span> Lin():</span>
+<span id="cb1-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, w, b):</span>
+<span id="cb1-3">        <span class="va" style="color: #111111;">self</span>.w <span class="op" style="color: #5E5E5E;">=</span> w</span>
+<span id="cb1-4">        <span class="va" style="color: #111111;">self</span>.b <span class="op" style="color: #5E5E5E;">=</span> b</span>
+<span id="cb1-5">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__call__</span>(<span class="va" style="color: #111111;">self</span>, x):</span>
+<span id="cb1-6">        y <span class="op" style="color: #5E5E5E;">=</span> x <span class="op" style="color: #5E5E5E;">@</span> <span class="va" style="color: #111111;">self</span>.w <span class="op" style="color: #5E5E5E;">+</span> <span class="va" style="color: #111111;">self</span>.b</span>
+<span id="cb1-7">        <span class="va" style="color: #111111;">self</span>.x <span class="op" style="color: #5E5E5E;">=</span> x</span>
+<span id="cb1-8">        <span class="va" style="color: #111111;">self</span>.y <span class="op" style="color: #5E5E5E;">=</span> y</span>
+<span id="cb1-9">        <span class="cf" style="color: #003B4F;">return</span> <span class="va" style="color: #111111;">self</span>.y</span>
+<span id="cb1-10">    <span class="kw" style="color: #003B4F;">def</span> backward(<span class="va" style="color: #111111;">self</span>):        </span>
+<span id="cb1-11">        <span class="va" style="color: #111111;">self</span>.b.g <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.y.g.<span class="bu" style="color: null;">sum</span>(dim<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">0</span>)</span>
+<span id="cb1-12">        <span class="va" style="color: #111111;">self</span>.w.g <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.x.T <span class="op" style="color: #5E5E5E;">@</span> <span class="va" style="color: #111111;">self</span>.y.g</span>
+<span id="cb1-13">        <span class="va" style="color: #111111;">self</span>.x.g <span class="op" style="color: #5E5E5E;">=</span>  <span class="va" style="color: #111111;">self</span>.y.g <span class="op" style="color: #5E5E5E;">@</span> <span class="va" style="color: #111111;">self</span>.w.T</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="kw" style="color: #003B4F;">class</span> ReLU():</span>
+<span id="cb2-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__call__</span>(<span class="va" style="color: #111111;">self</span>, x):</span>
+<span id="cb2-3">        <span class="va" style="color: #111111;">self</span>.x <span class="op" style="color: #5E5E5E;">=</span> x</span>
+<span id="cb2-4">        <span class="va" style="color: #111111;">self</span>.y <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.relu(x)</span>
+<span id="cb2-5">        <span class="cf" style="color: #003B4F;">return</span> <span class="va" style="color: #111111;">self</span>.y</span>
+<span id="cb2-6">    <span class="kw" style="color: #003B4F;">def</span> relu(<span class="va" style="color: #111111;">self</span>, x): <span class="cf" style="color: #003B4F;">return</span> x.clamp_min(<span class="fl" style="color: #AD0000;">0.</span>)</span>
+<span id="cb2-7">    <span class="kw" style="color: #003B4F;">def</span> backward(<span class="va" style="color: #111111;">self</span>): <span class="va" style="color: #111111;">self</span>.x.g <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.y.g <span class="op" style="color: #5E5E5E;">*</span> (<span class="va" style="color: #111111;">self</span>.x <span class="op" style="color: #5E5E5E;">&gt;</span> <span class="dv" style="color: #AD0000;">0</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="kw" style="color: #003B4F;">class</span> Mse():</span>
+<span id="cb3-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__call__</span>(<span class="va" style="color: #111111;">self</span>, pred, y):</span>
+<span id="cb3-3">        <span class="va" style="color: #111111;">self</span>.pred <span class="op" style="color: #5E5E5E;">=</span> pred</span>
+<span id="cb3-4">        <span class="va" style="color: #111111;">self</span>.targ <span class="op" style="color: #5E5E5E;">=</span> y</span>
+<span id="cb3-5">        <span class="cf" style="color: #003B4F;">return</span> (pred<span class="op" style="color: #5E5E5E;">-</span>y).<span class="bu" style="color: null;">pow</span>(<span class="dv" style="color: #AD0000;">2</span>).mean()</span>
+<span id="cb3-6">    <span class="kw" style="color: #003B4F;">def</span> backward(<span class="va" style="color: #111111;">self</span>):</span>
+<span id="cb3-7">        <span class="va" style="color: #111111;">self</span>.pred.g <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">2</span> <span class="op" style="color: #5E5E5E;">*</span> (<span class="va" style="color: #111111;">self</span>.pred <span class="op" style="color: #5E5E5E;">-</span> <span class="va" style="color: #111111;">self</span>.targ) <span class="op" style="color: #5E5E5E;">/</span> <span class="va" style="color: #111111;">self</span>.targ.shape[<span class="dv" style="color: #AD0000;">0</span>] <span class="op" style="color: #5E5E5E;">/</span> <span class="va" style="color: #111111;">self</span>.targ.shape[<span class="dv" style="color: #AD0000;">1</span>]</span></code></pre></div>
+</div>
+<p>The following code demonstrates the creation and use of a linear layer object. Look for:</p>
+<ul>
+<li><p>Initialization: <code>lin = Lin(w, b</code></p></li>
+<li><p>Forward application: <code>y = lin(x)</code></p></li>
+<li><p>Backpropagation: <code>lin.backward()</code></p></li>
+</ul>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="im" style="color: #00769E;">import</span> torch</span>
+<span id="cb4-2"><span class="im" style="color: #00769E;">from</span> fastcore.test <span class="im" style="color: #00769E;">import</span> test_close</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;"># Generate random weights for the model</span></span>
+<span id="cb5-2">M <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">4</span> <span class="co" style="color: #5E5E5E;"># Number of input features</span></span>
+<span id="cb5-3">H <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">2</span> <span class="co" style="color: #5E5E5E;"># Number of outputs</span></span>
+<span id="cb5-4">w <span class="op" style="color: #5E5E5E;">=</span> torch.randn(M,H)</span>
+<span id="cb5-5">b <span class="op" style="color: #5E5E5E;">=</span> torch.zeros(H)</span>
+<span id="cb5-6"></span>
+<span id="cb5-7"><span class="co" style="color: #5E5E5E;"># Create linear layer object</span></span>
+<span id="cb5-8">lin <span class="op" style="color: #5E5E5E;">=</span> Lin(w, b)</span>
+<span id="cb5-9"></span>
+<span id="cb5-10"><span class="co" style="color: #5E5E5E;"># Simulate inputs</span></span>
+<span id="cb5-11">N <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">3</span> <span class="co" style="color: #5E5E5E;"># Number of samples</span></span>
+<span id="cb5-12">x <span class="op" style="color: #5E5E5E;">=</span> torch.rand((N, M))<span class="op" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">10</span> <span class="op" style="color: #5E5E5E;">-</span> <span class="dv" style="color: #AD0000;">5</span> <span class="co" style="color: #5E5E5E;"># just random numbers as example</span></span>
+<span id="cb5-13"></span>
+<span id="cb5-14"><span class="co" style="color: #5E5E5E;"># Calculate the output of the layer</span></span>
+<span id="cb5-15">y <span class="op" style="color: #5E5E5E;">=</span> lin(x)</span>
+<span id="cb5-16"></span>
+<span id="cb5-17"><span class="co" style="color: #5E5E5E;"># Show inputs and outputs</span></span>
+<span id="cb5-18"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'x = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, x, <span class="st" style="color: #20794D;">'</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">y = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, y)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>x = 
+ tensor([[ 3.6329, -1.5028,  1.5645, -2.5170],
+        [ 4.4755,  3.9404, -3.6032, -0.0517],
+        [ 1.0234, -3.7332,  3.1473,  0.6829]]) 
+y = 
+ tensor([[ 0.6308, -2.3627],
+        [ 4.0016, -2.5262],
+        [-1.7378,  1.8884]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><span class="co" style="color: #5E5E5E;"># Provide output gradients (usually based on the Loss: y.g = dL/dy)</span></span>
+<span id="cb7-2">y.g <span class="op" style="color: #5E5E5E;">=</span> torch.rand(y.shape) <span class="co" style="color: #5E5E5E;"># output gradients are needed in order for backpropagation to work</span></span>
+<span id="cb7-3"></span>
+<span id="cb7-4"><span class="co" style="color: #5E5E5E;"># Calculate (backpropagate) gradients</span></span>
+<span id="cb7-5">lin.backward()</span>
+<span id="cb7-6"></span>
+<span id="cb7-7"><span class="co" style="color: #5E5E5E;"># Show gradients</span></span>
+<span id="cb7-8"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'x.g = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, x.g, <span class="st" style="color: #20794D;">'</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">w.g = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, w.g, <span class="st" style="color: #20794D;">'</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">b.g = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, b)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>x.g = 
+ tensor([[0.2319, 0.9382, 0.8166, 0.7303],
+        [0.2856, 0.8208, 0.5457, 0.4417],
+        [0.2376, 0.8698, 0.7110, 0.6232]]) 
+w.g = 
+ tensor([[ 8.1594,  5.1629],
+        [-0.9825, -1.6451],
+        [ 0.8388,  1.4778],
+        [-1.6999, -1.4052]]) 
+b.g = 
+ tensor([0., 0.])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1">relu <span class="op" style="color: #5E5E5E;">=</span> ReLU()</span>
+<span id="cb9-2">y_relu <span class="op" style="color: #5E5E5E;">=</span> relu(x)</span>
+<span id="cb9-3">x, y_relu</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>(tensor([[ 3.6329, -1.5028,  1.5645, -2.5170],
+         [ 4.4755,  3.9404, -3.6032, -0.0517],
+         [ 1.0234, -3.7332,  3.1473,  0.6829]]),
+ tensor([[3.6329, 0.0000, 1.5645, 0.0000],
+         [4.4755, 3.9404, 0.0000, 0.0000],
+         [1.0234, 0.0000, 3.1473, 0.6829]]))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">y_relu.g <span class="op" style="color: #5E5E5E;">=</span> torch.rand(y_relu.shape)</span>
+<span id="cb11-2">relu.backward()</span>
+<span id="cb11-3">x_relu_g <span class="op" style="color: #5E5E5E;">=</span> x.g</span></code></pre></div>
+</div>
+</section>
+<section id="models" class="level1">
+<h1>Models</h1>
+<p>A model is an arrangement of one or more layers. It contains all the weights and relationships that allow an input to be transformed into an output and loss and the derivative of the loss to be back-propagated to the model weights and inputs. Each layer can be considered a simple model. Each model have the same general methods as a layer.</p>
+<p>A kind of a distinction between a model and layer could be introduced if the explicit output of the model is restricted to be a scalar - the loss. But the loss is quite often calculated separately over the outputs of the model in which case the models are just more complex layers.</p>
+<p>The simplest arrangement is a sequence of layers where the output of each layer (except the last one) is input to the next layer.</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;"># A model with just a Linear, ReLU and Loss layers</span></span>
+<span id="cb12-2"></span>
+<span id="cb12-3"><span class="co" style="color: #5E5E5E;"># The output of the model is the loss. </span></span>
+<span id="cb12-4"><span class="co" style="color: #5E5E5E;"># In additon, the output of the last layer (usually the loss is not counted as a layer)</span></span>
+<span id="cb12-5"><span class="co" style="color: #5E5E5E;"># is saved as model attribure self.y</span></span>
+<span id="cb12-6"></span>
+<span id="cb12-7"><span class="kw" style="color: #003B4F;">class</span> Model():</span>
+<span id="cb12-8">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, w, b):</span>
+<span id="cb12-9">        <span class="va" style="color: #111111;">self</span>.layers <span class="op" style="color: #5E5E5E;">=</span> [Lin(w, b), ReLU()]</span>
+<span id="cb12-10">        <span class="va" style="color: #111111;">self</span>.loss <span class="op" style="color: #5E5E5E;">=</span> Mse()</span>
+<span id="cb12-11">        </span>
+<span id="cb12-12">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__call__</span>(<span class="va" style="color: #111111;">self</span>, x, targ):</span>
+<span id="cb12-13">        <span class="cf" style="color: #003B4F;">for</span> l <span class="kw" style="color: #003B4F;">in</span> <span class="va" style="color: #111111;">self</span>.layers: </span>
+<span id="cb12-14">            x <span class="op" style="color: #5E5E5E;">=</span> l(x)</span>
+<span id="cb12-15">        <span class="va" style="color: #111111;">self</span>.y <span class="op" style="color: #5E5E5E;">=</span> x</span>
+<span id="cb12-16">        <span class="cf" style="color: #003B4F;">return</span> <span class="va" style="color: #111111;">self</span>.loss(x, targ)</span>
+<span id="cb12-17">    </span>
+<span id="cb12-18">    <span class="kw" style="color: #003B4F;">def</span> backward(<span class="va" style="color: #111111;">self</span>):</span>
+<span id="cb12-19">        <span class="va" style="color: #111111;">self</span>.loss.backward()</span>
+<span id="cb12-20">        <span class="cf" style="color: #003B4F;">for</span> l <span class="kw" style="color: #003B4F;">in</span> <span class="bu" style="color: null;">reversed</span>(<span class="va" style="color: #111111;">self</span>.layers): </span>
+<span id="cb12-21">            l.backward()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1">model <span class="op" style="color: #5E5E5E;">=</span> Model(w, b)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><span class="co" style="color: #5E5E5E;"># Simulate target values (needed to calculate the loss)</span></span>
+<span id="cb14-2">k1, k2, k3, k4, k6, k7 <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">1</span>, <span class="fl" style="color: #AD0000;">1.5</span>, <span class="dv" style="color: #AD0000;">2</span>, <span class="fl" style="color: #AD0000;">2.5</span>, <span class="fl" style="color: #AD0000;">3.0</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.5</span></span>
+<span id="cb14-3">W_true <span class="op" style="color: #5E5E5E;">=</span> torch.tensor([[k1, k1],</span>
+<span id="cb14-4">                  [k2, k2],</span>
+<span id="cb14-5">                  [k3, k6],</span>
+<span id="cb14-6">                  [k4, k7]])</span>
+<span id="cb14-7">b_true <span class="op" style="color: #5E5E5E;">=</span> torch.tensor([<span class="dv" style="color: #AD0000;">0</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>])</span>
+<span id="cb14-8">y_target <span class="op" style="color: #5E5E5E;">=</span> x <span class="op" style="color: #5E5E5E;">@</span> W_true <span class="op" style="color: #5E5E5E;">+</span> b_true <span class="co" style="color: #5E5E5E;"># Output</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1">loss <span class="op" style="color: #5E5E5E;">=</span> model(x, y_target)</span>
+<span id="cb15-2">loss</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>tensor(10.5302)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">out <span class="op" style="color: #5E5E5E;">=</span> model.y</span>
+<span id="cb17-2">out</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<pre><code>tensor([[0.6308, 0.0000],
+        [4.0016, 0.0000],
+        [0.0000, 1.8884]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1">model.backward()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="co" style="color: #5E5E5E;"># Show gradients</span></span>
+<span id="cb20-2"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'x.g = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, x.g, <span class="st" style="color: #20794D;">'</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">w.g = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, w.g, <span class="st" style="color: #20794D;">'</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">b.g = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, b)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>x.g = 
+ tensor([[ 0.3201,  0.5563,  0.1117, -0.0025],
+        [ 0.1260,  0.2190,  0.0440, -0.0010],
+        [ 0.0929, -0.2466, -0.5286, -0.5591]]) 
+w.g = 
+ tensor([[ 4.3441, -0.5581],
+        [ 0.0389,  2.0357],
+        [ 0.1176, -1.7162],
+        [-2.0432, -0.3724]]) 
+b.g = 
+ tensor([0., 0.])</code></pre>
+</div>
+</div>
+</section>
+<section id="the-module-class-and-class-inheritance" class="level1">
+<h1>The Module class and class inheritance</h1>
+<p>Above classes can be based on a more general class so and more information can be hidden, e.g.&nbsp;saving parameter gradients, saving inputs and outputs, etc. Only the initialization and the functions needed to do the forward and backward pass need to be redefined. All we have is modules and submodules.</p>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><span class="kw" style="color: #003B4F;">class</span> Module():        </span>
+<span id="cb22-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__call__</span>(<span class="va" style="color: #111111;">self</span>, <span class="op" style="color: #5E5E5E;">*</span>x):</span>
+<span id="cb22-3">        <span class="va" style="color: #111111;">self</span>.x <span class="op" style="color: #5E5E5E;">=</span> x</span>
+<span id="cb22-4">        <span class="va" style="color: #111111;">self</span>.y <span class="op" style="color: #5E5E5E;">=</span> <span class="va" style="color: #111111;">self</span>.forward(<span class="op" style="color: #5E5E5E;">*</span>x)</span>
+<span id="cb22-5">        <span class="cf" style="color: #003B4F;">return</span> <span class="va" style="color: #111111;">self</span>.y    </span>
+<span id="cb22-6">    <span class="kw" style="color: #003B4F;">def</span> backward(<span class="va" style="color: #111111;">self</span>):</span>
+<span id="cb22-7">        <span class="va" style="color: #111111;">self</span>.bwd(<span class="va" style="color: #111111;">self</span>.y, <span class="op" style="color: #5E5E5E;">*</span><span class="va" style="color: #111111;">self</span>.x)</span>
+<span id="cb22-8">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>):</span>
+<span id="cb22-9">        <span class="cf" style="color: #003B4F;">raise</span> <span class="pp" style="color: #AD0000;">Exception</span>(<span class="st" style="color: #20794D;">'Not implemented'</span>)    </span>
+<span id="cb22-10">    <span class="kw" style="color: #003B4F;">def</span> bwd(<span class="va" style="color: #111111;">self</span>):</span>
+<span id="cb22-11">        <span class="cf" style="color: #003B4F;">raise</span> <span class="pp" style="color: #AD0000;">Exception</span>(<span class="st" style="color: #20794D;">'Not implemented'</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="kw" style="color: #003B4F;">class</span> Lin(Module):</span>
+<span id="cb23-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, w, b):</span>
+<span id="cb23-3">        <span class="va" style="color: #111111;">self</span>.w <span class="op" style="color: #5E5E5E;">=</span> w</span>
+<span id="cb23-4">        <span class="va" style="color: #111111;">self</span>.b <span class="op" style="color: #5E5E5E;">=</span> b</span>
+<span id="cb23-5">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, x):</span>
+<span id="cb23-6">        y <span class="op" style="color: #5E5E5E;">=</span> x <span class="op" style="color: #5E5E5E;">@</span> <span class="va" style="color: #111111;">self</span>.w <span class="op" style="color: #5E5E5E;">+</span> <span class="va" style="color: #111111;">self</span>.b</span>
+<span id="cb23-7">        <span class="cf" style="color: #003B4F;">return</span> y</span>
+<span id="cb23-8">    <span class="kw" style="color: #003B4F;">def</span> bwd(<span class="va" style="color: #111111;">self</span>, y, x):        </span>
+<span id="cb23-9">        <span class="va" style="color: #111111;">self</span>.b.g <span class="op" style="color: #5E5E5E;">=</span> y.g.<span class="bu" style="color: null;">sum</span>(dim<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">0</span>)</span>
+<span id="cb23-10">        <span class="va" style="color: #111111;">self</span>.w.g <span class="op" style="color: #5E5E5E;">=</span> x.T <span class="op" style="color: #5E5E5E;">@</span> y.g</span>
+<span id="cb23-11">        x.g <span class="op" style="color: #5E5E5E;">=</span>  y.g <span class="op" style="color: #5E5E5E;">@</span> <span class="va" style="color: #111111;">self</span>.w.T</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><span class="co" style="color: #5E5E5E;"># Create linear layer object</span></span>
+<span id="cb24-2">lin <span class="op" style="color: #5E5E5E;">=</span> Lin(w, b)</span>
+<span id="cb24-3"></span>
+<span id="cb24-4"><span class="co" style="color: #5E5E5E;"># Calculate the output of the layer</span></span>
+<span id="cb24-5">y2 <span class="op" style="color: #5E5E5E;">=</span> lin(x)</span>
+<span id="cb24-6"></span>
+<span id="cb24-7"><span class="co" style="color: #5E5E5E;"># Test results</span></span>
+<span id="cb24-8">test_close(y, y2)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1">lin.y.g <span class="op" style="color: #5E5E5E;">=</span> torch.rand(lin.y.shape)</span>
+<span id="cb25-2">lin.backward()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1">test_close(x.g, lin.x[<span class="dv" style="color: #AD0000;">0</span>].g)</span>
+<span id="cb26-2">test_close(w.g, lin.w.g)</span>
+<span id="cb26-3">test_close(b.g, lin.b.g)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><span class="kw" style="color: #003B4F;">class</span> ReLU(Module):</span>
+<span id="cb27-2">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, x): <span class="cf" style="color: #003B4F;">return</span> x.clamp_min(<span class="fl" style="color: #AD0000;">0.</span>)</span>
+<span id="cb27-3">    <span class="kw" style="color: #003B4F;">def</span> bwd(<span class="va" style="color: #111111;">self</span>, y, x): x.g <span class="op" style="color: #5E5E5E;">=</span> y.g <span class="op" style="color: #5E5E5E;">*</span> (x <span class="op" style="color: #5E5E5E;">&gt;</span> <span class="dv" style="color: #AD0000;">0</span>)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1">relu <span class="op" style="color: #5E5E5E;">=</span> ReLU()</span>
+<span id="cb28-2">test_close( relu(x), y_relu)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1">relu.y.g <span class="op" style="color: #5E5E5E;">=</span> y_relu.g</span>
+<span id="cb29-2">relu.backward()</span>
+<span id="cb29-3">test_close(relu.x[<span class="dv" style="color: #AD0000;">0</span>].g, x_relu_g)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><span class="kw" style="color: #003B4F;">class</span> Mse(Module):</span>
+<span id="cb30-2">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, pred, y): <span class="cf" style="color: #003B4F;">return</span> (pred<span class="op" style="color: #5E5E5E;">-</span>y).<span class="bu" style="color: null;">pow</span>(<span class="dv" style="color: #AD0000;">2</span>).mean()</span>
+<span id="cb30-3">    <span class="kw" style="color: #003B4F;">def</span> bwd(<span class="va" style="color: #111111;">self</span>, out, pred, targ):</span>
+<span id="cb30-4">        pred.g <span class="op" style="color: #5E5E5E;">=</span> <span class="dv" style="color: #AD0000;">2</span> <span class="op" style="color: #5E5E5E;">*</span> (pred <span class="op" style="color: #5E5E5E;">-</span> targ) <span class="op" style="color: #5E5E5E;">/</span> targ.shape[<span class="dv" style="color: #AD0000;">0</span>] <span class="op" style="color: #5E5E5E;">/</span> targ.shape[<span class="dv" style="color: #AD0000;">1</span>]</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1">model <span class="op" style="color: #5E5E5E;">=</span> Model(w, b)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1">test_close(model(x, y_target), loss)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1">model.backward()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><span class="co" style="color: #5E5E5E;"># Show gradients</span></span>
+<span id="cb34-2"><span class="bu" style="color: null;">print</span>(<span class="st" style="color: #20794D;">'x.g = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, x.g, <span class="st" style="color: #20794D;">'</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">w.g = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, w.g, <span class="st" style="color: #20794D;">'</span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">b.g = </span><span class="ch" style="color: #20794D;">\n</span><span class="st" style="color: #20794D;">'</span>, b)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>x.g = 
+ tensor([[ 0.3201,  0.5563,  0.1117, -0.0025],
+        [ 0.1260,  0.2190,  0.0440, -0.0010],
+        [ 0.0929, -0.2466, -0.5286, -0.5591]]) 
+w.g = 
+ tensor([[ 4.3441, -0.5581],
+        [ 0.0389,  2.0357],
+        [ 0.1176, -1.7162],
+        [-2.0432, -0.3724]]) 
+b.g = 
+ tensor([0., 0.])</code></pre>
+</div>
+</div>
+</section>
+<section id="pytorch-layers-and-module-class" class="level1">
+<h1>PyTorch layers and Module class</h1>
+<p>The above Module will be replaced by the standard PyTorch class <code>nn.Module</code>. The autograd and backpropagation features of PyTorch will be used to remove the need for defining the <code>bwd</code> or the <code>backward</code>methods. The <code>Lin</code> layer will be redefined to inherit <code>nn.Module</code>. The <code>ReLU()</code> and <code>Mse()</code> layers will be replaced by <code>nn.ReLU()</code> and <code>nn.MSELoss()</code> respectively.</p>
+<div class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><span class="im" style="color: #00769E;">from</span> torch <span class="im" style="color: #00769E;">import</span> nn</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="30">
+<div class="sourceCode cell-code" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><span class="kw" style="color: #003B4F;">class</span> Lin(nn.Module):</span>
+<span id="cb37-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, w, b):</span>
+<span id="cb37-3">        <span class="bu" style="color: null;">super</span>().<span class="fu" style="color: #4758AB;">__init__</span>()</span>
+<span id="cb37-4">        <span class="va" style="color: #111111;">self</span>.w <span class="op" style="color: #5E5E5E;">=</span> w.requires_grad_(<span class="va" style="color: #111111;">True</span>)</span>
+<span id="cb37-5">        <span class="va" style="color: #111111;">self</span>.b <span class="op" style="color: #5E5E5E;">=</span> b.requires_grad_(<span class="va" style="color: #111111;">True</span>)</span>
+<span id="cb37-6">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, x):</span>
+<span id="cb37-7">        y <span class="op" style="color: #5E5E5E;">=</span> x <span class="op" style="color: #5E5E5E;">@</span> <span class="va" style="color: #111111;">self</span>.w <span class="op" style="color: #5E5E5E;">+</span> <span class="va" style="color: #111111;">self</span>.b</span>
+<span id="cb37-8">        <span class="cf" style="color: #003B4F;">return</span> y</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><span class="co" style="color: #5E5E5E;"># Create linear layer object</span></span>
+<span id="cb38-2">lin <span class="op" style="color: #5E5E5E;">=</span> Lin(w, b)</span>
+<span id="cb38-3"></span>
+<span id="cb38-4"><span class="co" style="color: #5E5E5E;"># Calculate the output of the layer</span></span>
+<span id="cb38-5">y2 <span class="op" style="color: #5E5E5E;">=</span> lin(x)</span>
+<span id="cb38-6"></span>
+<span id="cb38-7"><span class="co" style="color: #5E5E5E;"># Test results</span></span>
+<span id="cb38-8">test_close(y, y2)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1">y2.grad <span class="op" style="color: #5E5E5E;">=</span> torch.rand(y.shape) <span class="co" style="color: #5E5E5E;"># output gradients are needed in order for backpropagation to work</span></span>
+<span id="cb39-2"></span>
+<span id="cb39-3"><span class="co" style="color: #5E5E5E;"># Calculate (backpropagate) gradients</span></span>
+<span id="cb39-4"><span class="co" style="color: #5E5E5E;"># y2.backward()</span></span>
+<span id="cb39-5"></span>
+<span id="cb39-6"><span class="co" style="color: #5E5E5E;"># RuntimeError: grad can be implicitly created only for scalar outputs</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><span class="kw" style="color: #003B4F;">class</span> Model(nn.Module):</span>
+<span id="cb40-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, w, b):</span>
+<span id="cb40-3">        <span class="bu" style="color: null;">super</span>().<span class="fu" style="color: #4758AB;">__init__</span>()</span>
+<span id="cb40-4">        <span class="va" style="color: #111111;">self</span>.layers <span class="op" style="color: #5E5E5E;">=</span> [Lin(w, b), nn.ReLU()]</span>
+<span id="cb40-5">        <span class="va" style="color: #111111;">self</span>.loss <span class="op" style="color: #5E5E5E;">=</span> nn.MSELoss()        </span>
+<span id="cb40-6">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, x, targ):</span>
+<span id="cb40-7">        <span class="cf" style="color: #003B4F;">for</span> l <span class="kw" style="color: #003B4F;">in</span> <span class="va" style="color: #111111;">self</span>.layers: </span>
+<span id="cb40-8">            x <span class="op" style="color: #5E5E5E;">=</span> l(x)</span>
+<span id="cb40-9">        <span class="va" style="color: #111111;">self</span>.y <span class="op" style="color: #5E5E5E;">=</span> x</span>
+<span id="cb40-10">        <span class="cf" style="color: #003B4F;">return</span> <span class="va" style="color: #111111;">self</span>.loss(x, targ)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1">model <span class="op" style="color: #5E5E5E;">=</span> Model(w, b)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1">loss <span class="op" style="color: #5E5E5E;">=</span> model(x, y_target)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1">loss</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="36">
+<pre><code>tensor(10.5302, grad_fn=&lt;MseLossBackward0&gt;)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1">loss.backward()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1">test_close(w.grad, w.g)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1">test_close(b.grad, b.g)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="40">
+<div class="sourceCode cell-code" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1">x.grad</span>
+<span id="cb48-2"><span class="co" style="color: #5E5E5E;"># None because `x.requires_grad_(True)` was never called</span></span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="41">
+<div class="sourceCode cell-code" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1">x.requires_grad_(<span class="va" style="color: #111111;">True</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="41">
+<pre><code>tensor([[ 3.6329, -1.5028,  1.5645, -2.5170],
+        [ 4.4755,  3.9404, -3.6032, -0.0517],
+        [ 1.0234, -3.7332,  3.1473,  0.6829]], requires_grad=True)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><span class="co" style="color: #5E5E5E;"># gradients accumulate</span></span>
+<span id="cb51-2">w.grad.zero_()</span>
+<span id="cb51-3">b.grad.zero_()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="42">
+<pre><code>tensor([0., 0.])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1">loss <span class="op" style="color: #5E5E5E;">=</span> model(x, y_target)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1">loss.backward()</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="45">
+<div class="sourceCode cell-code" id="cb55" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1">x.grad</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="45">
+<pre><code>tensor([[ 0.3201,  0.5563,  0.1117, -0.0025],
+        [ 0.1260,  0.2190,  0.0440, -0.0010],
+        [ 0.0929, -0.2466, -0.5286, -0.5591]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="46">
+<div class="sourceCode cell-code" id="cb57" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1">test_close(x.grad, x.g)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="47">
+<div class="sourceCode cell-code" id="cb58" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1">test_close(w.grad, w.g)</span></code></pre></div>
+</div>
+</section>
+<section id="some-more-details-in-pytorch" class="level1">
+<h1>Some more details in PyTorch</h1>
+<div class="cell" data-execution_count="48">
+<div class="sourceCode cell-code" id="cb59" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><span class="co" style="color: #5E5E5E;"># notice that the layers of the model are not properly registered and accessible</span></span>
+<span id="cb59-2">model</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="48">
+<pre><code>Model(
+  (loss): MSELoss()
+)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb61" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1">model.layers[<span class="dv" style="color: #AD0000;">1</span>](x)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="49">
+<pre><code>tensor([[3.6329, 0.0000, 1.5645, 0.0000],
+        [4.4755, 3.9404, 0.0000, 0.0000],
+        [1.0234, 0.0000, 3.1473, 0.6829]], grad_fn=&lt;ReluBackward0&gt;)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb63" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><span class="bu" style="color: null;">list</span>(model.named_children())</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="50">
+<pre><code>[('loss', MSELoss())]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="51">
+<div class="sourceCode cell-code" id="cb65" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><span class="bu" style="color: null;">list</span>(model.parameters())</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="51">
+<pre><code>[]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="52">
+<div class="sourceCode cell-code" id="cb67" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><span class="cf" style="color: #003B4F;">for</span> p <span class="kw" style="color: #003B4F;">in</span> model.parameters(): <span class="bu" style="color: null;">print</span>(p.shape)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb68" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><span class="kw" style="color: #003B4F;">class</span> Model(nn.Module):</span>
+<span id="cb68-2">    <span class="kw" style="color: #003B4F;">def</span> <span class="fu" style="color: #4758AB;">__init__</span>(<span class="va" style="color: #111111;">self</span>, w, b):</span>
+<span id="cb68-3">        <span class="bu" style="color: null;">super</span>().<span class="fu" style="color: #4758AB;">__init__</span>()</span>
+<span id="cb68-4">        layers <span class="op" style="color: #5E5E5E;">=</span> [Lin(w, b), nn.ReLU()]</span>
+<span id="cb68-5">        <span class="va" style="color: #111111;">self</span>.layers <span class="op" style="color: #5E5E5E;">=</span> nn.ModuleList(layers)</span>
+<span id="cb68-6">        <span class="va" style="color: #111111;">self</span>.loss <span class="op" style="color: #5E5E5E;">=</span> nn.MSELoss()        </span>
+<span id="cb68-7">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, x, targ):</span>
+<span id="cb68-8">        <span class="cf" style="color: #003B4F;">for</span> l <span class="kw" style="color: #003B4F;">in</span> <span class="va" style="color: #111111;">self</span>.layers: </span>
+<span id="cb68-9">            x <span class="op" style="color: #5E5E5E;">=</span> l(x)</span>
+<span id="cb68-10">        <span class="va" style="color: #111111;">self</span>.y <span class="op" style="color: #5E5E5E;">=</span> x</span>
+<span id="cb68-11">        <span class="cf" style="color: #003B4F;">return</span> <span class="va" style="color: #111111;">self</span>.loss(x, targ)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="54">
+<div class="sourceCode cell-code" id="cb69" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1">model <span class="op" style="color: #5E5E5E;">=</span> Model(w, b)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="55">
+<div class="sourceCode cell-code" id="cb70" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><span class="bu" style="color: null;">list</span>(model.named_children())</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="55">
+<pre><code>[('layers',
+  ModuleList(
+    (0): Lin()
+    (1): ReLU()
+  )),
+ ('loss', MSELoss())]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="56">
+<div class="sourceCode cell-code" id="cb72" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><span class="bu" style="color: null;">list</span>(model.parameters())</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="56">
+<pre><code>[]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="57">
+<div class="sourceCode cell-code" id="cb74" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1">model.layers[<span class="dv" style="color: #AD0000;">0</span>].w</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="57">
+<pre><code>tensor([[ 0.3975, -0.1704],
+        [ 0.6908,  0.4523],
+        [ 0.1387,  0.9694],
+        [-0.0032,  1.0253]], requires_grad=True)</code></pre>
+</div>
+</div>
+<p>See <a href="https://github.com/fastai/course22p2/blob/master/nbs/04_minibatch_training.ipynb">04_minibatch_training.ipynb</a> to learn how to use parameters and set attrivutes and register modules (sections Using parameters and optim)</p>
+</section>
+<section id="designing-models-and-layers-with-pytorch-and-nn.sequential" class="level1">
+<h1>Designing models and layers with PyTorch and nn.Sequential()</h1>
+<div class="cell" data-execution_count="58">
+<div class="sourceCode cell-code" id="cb76" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb76-1">model <span class="op" style="color: #5E5E5E;">=</span> nn.Sequential(nn.Linear(M,H), nn.ReLU(), nn.Linear(H,<span class="dv" style="color: #AD0000;">10</span>))</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="59">
+<div class="sourceCode cell-code" id="cb77" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb77-1">model</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="59">
+<pre><code>Sequential(
+  (0): Linear(in_features=4, out_features=2, bias=True)
+  (1): ReLU()
+  (2): Linear(in_features=2, out_features=10, bias=True)
+)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="60">
+<div class="sourceCode cell-code" id="cb79" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1">layers <span class="op" style="color: #5E5E5E;">=</span> [nn.Linear(M,H), nn.ReLU(), nn.Linear(H,<span class="dv" style="color: #AD0000;">10</span>)]</span>
+<span id="cb79-2">model <span class="op" style="color: #5E5E5E;">=</span> nn.Sequential(<span class="op" style="color: #5E5E5E;">*</span>layers)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="61">
+<div class="sourceCode cell-code" id="cb80" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb80-1">model</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="61">
+<pre><code>Sequential(
+  (0): Linear(in_features=4, out_features=2, bias=True)
+  (1): ReLU()
+  (2): Linear(in_features=2, out_features=10, bias=True)
+)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="62">
+<div class="sourceCode cell-code" id="cb82" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb82-1"><span class="cf" style="color: #003B4F;">for</span> p <span class="kw" style="color: #003B4F;">in</span> model.parameters(): <span class="bu" style="color: null;">print</span>(p.shape)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch.Size([2, 4])
+torch.Size([2])
+torch.Size([10, 2])
+torch.Size([10])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="63">
+<div class="sourceCode cell-code" id="cb84" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb84-1"><span class="bu" style="color: null;">list</span>(model.parameters())</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="63">
+<pre><code>[Parameter containing:
+ tensor([[-0.2547,  0.3678, -0.3120, -0.4402],
+         [-0.0581,  0.0541, -0.0433,  0.2772]], requires_grad=True),
+ Parameter containing:
+ tensor([ 0.2642, -0.2418], requires_grad=True),
+ Parameter containing:
+ tensor([[ 0.1416,  0.5259],
+         [ 0.1009, -0.4274],
+         [-0.2409,  0.4319],
+         [-0.2980,  0.1193],
+         [ 0.3526,  0.3844],
+         [-0.3655, -0.0480],
+         [ 0.2450, -0.4946],
+         [-0.3897,  0.2618],
+         [-0.1028,  0.5648],
+         [ 0.5452, -0.5314]], requires_grad=True),
+ Parameter containing:
+ tensor([ 0.3573,  0.3235, -0.6281, -0.4056, -0.6562, -0.1154,  0.0053, -0.3871,
+          0.4785, -0.0720], requires_grad=True)]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="64">
+<div class="sourceCode cell-code" id="cb86" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb86-1"><span class="co" style="color: #5E5E5E;"># Example of a custom layer</span></span>
+<span id="cb86-2"><span class="co" style="color: #5E5E5E;"># Global Average Pooling Layer (Adaptive Average Pooling Layer)</span></span>
+<span id="cb86-3"></span>
+<span id="cb86-4"><span class="kw" style="color: #003B4F;">class</span> GlobalAvgPooling(nn.Module):</span>
+<span id="cb86-5">    <span class="kw" style="color: #003B4F;">def</span> forward(<span class="va" style="color: #111111;">self</span>, x):</span>
+<span id="cb86-6">        <span class="cf" style="color: #003B4F;">return</span> x.mean((<span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">2</span>, <span class="op" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>))</span></code></pre></div>
+</div>
+
+
+</section>
+
+ ]]></description>
+  <category>NN</category>
+  <category>code</category>
+  <guid>https://krasing.github.io/nn/posts/classes/classes.html</guid>
+  <pubDate>Mon, 02 Jan 2023 22:00:00 GMT</pubDate>
+  <media:content url="https://krasing.github.io/nn/posts/classes/custom_layer.png" medium="image" type="image/png" height="55" width="144"/>
+</item>
 <item>
   <title>The Loss</title>
   <dc:creator>Krasin Georgiev</dc:creator>

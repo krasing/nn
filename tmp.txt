@@ -1,0 +1,30 @@
+# Update with GIT
+
+quarto render
+git pull
+git status
+git add docs/*
+git status
+git add posts/gradients.ipynb 
+git status
+git rm index.html
+git add *.png
+git status
+git commit -m 'edit gradients'
+git push
+
+
+conda activate fastai
+jupyter notebook
+
+quarto preview
+
+
+
+quarto render
+git status
+git add *
+git status
+git commit -m 'minor formatting'
+git push
+

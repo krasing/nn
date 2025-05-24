@@ -2,22 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://krasing.github.io/nn/index.html</loc>
-    <lastmod>2023-01-03T15:35:41.089Z</lastmod>
-  </url>
-  <url>
-    <loc>https://krasing.github.io/nn/posts/welcome/index.html</loc>
-    <lastmod>2022-12-08T08:31:06.496Z</lastmod>
-  </url>
-  <url>
-    <loc>https://krasing.github.io/nn/posts/loss/loss.html</loc>
-    <lastmod>2022-12-14T12:27:23.628Z</lastmod>
+    <lastmod>2022-12-08T08:17:52.928Z</lastmod>
   </url>
   <url>
     <loc>https://krasing.github.io/nn/posts/classes/classes.html</loc>
-    <lastmod>2023-01-03T15:33:41.216Z</lastmod>
+    <lastmod>2023-01-03T15:33:40.344Z</lastmod>
+  </url>
+  <url>
+    <loc>https://krasing.github.io/nn/posts/loss/loss.html</loc>
+    <lastmod>2022-12-14T11:58:14.809Z</lastmod>
+  </url>
+  <url>
+    <loc>https://krasing.github.io/nn/posts/welcome/index.html</loc>
+    <lastmod>2022-12-08T08:31:05.292Z</lastmod>
   </url>
   <url>
     <loc>https://krasing.github.io/nn/posts/gradients/gradients.html</loc>
-    <lastmod>2023-01-03T15:34:06.756Z</lastmod>
+    <lastmod>2025-05-24T11:56:14.273Z</lastmod>
+  </url>
+  <url>
+    <loc>https://krasing.github.io/nn/about.html</loc>
+    <lastmod>2022-11-27T13:23:17.175Z</lastmod>
   </url>
 </urlset>
